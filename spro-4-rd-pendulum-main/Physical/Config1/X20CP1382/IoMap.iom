@@ -1,0 +1,18 @@
+VAR_CONFIG
+	::I_pos_pendulum AT %ID."X2".Counter01Value;
+	::I_pos_cart AT %ID."X2".Counter02Value;
+	::reset_cart_position AT %QX."X2".Counter02Reset;
+	::reset_pendulum_position AT %QX."X2".Counter01Reset;
+	::I_endstop_negative AT %IX."X2".DigitalInput09;
+	::I_endstop_positive AT %IX."X2".DigitalInput10;
+	::I_drive_active AT %IX."X2".DigitalInput08;
+	::I_drive_no_fault AT %IX."X2".DigitalInput07;
+	::Q_vel_cart AT %QW."X20AO2622".AnalogOutput01;
+	::Q_drive_enable AT %QX."X3".DigitalOutput01;
+	::Q_drive_operating_mode AT %QX."X3".DigitalOutput02;
+	::Q_drive_faultreset AT %QX."X3".DigitalOutput03;
+	::SI_estop_A AT %IX."X1".DigitalInput01;
+	::SI_estop_B AT %IX."X1".DigitalInput02;
+	::SI_reset_btn AT %IX."X1".DigitalInput03;
+	::Q_reset_LED AT %QX."X3".DigitalOutput05;
+END_VAR

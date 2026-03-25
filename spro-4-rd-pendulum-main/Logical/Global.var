@@ -1,0 +1,18 @@
+VAR
+	Q_reset_LED : BOOL;
+	SI_estop_B : BOOL;
+	SI_estop_A : BOOL;
+	I_drive_active : BOOL;
+	I_drive_no_fault : BOOL;
+	I_endstop_negative : BOOL;
+	I_endstop_positive : BOOL;
+	I_pos_cart : DINT;
+	I_pos_pendulum : DINT;
+	Q_drive_enable : BOOL;
+	Q_drive_faultreset : BOOL;
+	Q_drive_operating_mode : BOOL;
+	Q_vel_cart : INT;
+	SI_reset_btn : BOOL;
+	reset_cart_position : BOOL;
+	reset_pendulum_position : BOOL;
+END_VAR
