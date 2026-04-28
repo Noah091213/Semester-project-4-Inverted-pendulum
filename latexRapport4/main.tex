@@ -1,0 +1,112 @@
+\documentclass[11pt, a4paper]{report}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, linkcolor=black, urlcolor=blue, citecolor=blue]{hyperref}
+\usepackage{fancyhdr} 
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{comment}
+\usepackage{subcaption}
+\usepackage{xurl}
+
+% Formatting
+\usepackage[
+a4paper,
+top=2cm, 
+bottom=2cm,
+inner=2cm,
+outer=2cm,
+marginparsep=0.5cm,
+showframe=false
+]{geometry}
+
+\setcounter{tocdepth}{1}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{times} % Times-like serif font
+\usepackage{mathptmx} % Match math to Times
+
+% Chapter titles format
+\titleformat{\chapter}[hang] % Use 'hang' format, which prints title on one line
+{\normalfont\bfseries\Huge} % Font style (Bold, Huge size)
+{\thechapter} %{\chaptertitlename\ \thechapter:} = "Chapter 1:"
+{1em} % Horizontal space between label and title
+{}
+\titlespacing*{\chapter}
+{0pt}{3.5ex}{2.3ex} % {left}{before skip}{after skip}
+
+\begin{document}
+	\begin{titlepage}
+		\centering
+		{\Huge \textbf{Semester project on signals in robot systems} \par} % Title of the report
+		\vspace{1.5cm}
+		
+		{\LARGE BEng in Robot Systems \par} % Education
+		\vspace{0cm}
+		
+		{\Large 3. Semester \par} % Semester
+		\vspace{1.5cm}
+		
+		{\Large \textbf{Authors (Group 3)} \par} % Authors section
+		\vspace{0.5cm}
+		
+		\begin{tabular}{l l l}
+			Name & Username & Date of birth \\ 
+			\hline
+			Noah V. Vryens & novry24 & 01/04/2002 \\
+			Rasmus K. Nielsen & rasni19 & 25/12/1997 \\
+			Emma B. Rasmussen & erasm24 & 15/05/2001 \\
+			Jannick H. Irvold & jairv24 & 23/10/2002 \\
+			Eymundur Ó. Pálsson & eypal24 & 31/08/2002 \\
+		\end{tabular}
+		\vspace{2cm}
+		
+		{\Large \textbf{Supervisor} \par}
+		\vspace{0.5cm}
+		
+		Cheng Fang \par
+		chfa@mmmi.sdu.dk \par
+		\vspace{10cm}
+		
+		Characters: 47.689
+		
+		\vfill
+		
+		{\large \today} % Date
+	\end{titlepage}
+	
+	\pagenumbering{gobble}
+	
+	\input{00_abstract.tex}
+	
+	\tableofcontents
+	
+	\clearpage
+	\pagenumbering{arabic}
+	
+	% Main Body (Chapters)
+	\input{01_introduction.tex}
+	\input{02_system_modeling.tex}
+	\input{03_control_theroy}
+	\input{04_plc_implementation}
+	\input{05_datacollection.tex}
+	\input{06_evaluation.tex} 
+	\input{07_discussion.tex}
+	\input{08_conclusion.tex}
+	\input{09_references.tex}
+	
+	\appendix
+	\input{A_taskdistribution.tex}
+
+	
+\end{document}
