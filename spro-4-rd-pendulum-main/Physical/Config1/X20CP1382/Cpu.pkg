@@ -11,6 +11,7 @@
     <Object Type="Package">UnitSystem</Object>
     <Object Type="Package">AccessAndSecurity</Object>
     <Object Type="Package">mappView</Object>
+    <Object Type="Package">Motion</Object>
   </Objects>
   <Configuration ModuleId="X20CP1382">
     <AutomationRuntime Version="H4.83" />

@@ -35,7 +35,7 @@
     </Connector>
     <Parameter ID="ConfigurationID" Value="spro4_pendulum_Config1" />
     <Parameter ID="SystemTick" Value="1000" />
-    <Parameter ID="Cyclic1Duration" Value="2000" />
+    <Parameter ID="Cyclic1Duration" Value="1000" />
   </Module>
   <Module Name="X20TB12" Type="X20TB12" Version="1.0.0.0" />
   <Module Name="X20TB1F" Type="X20TB1F" Version="1.0.0.0" />

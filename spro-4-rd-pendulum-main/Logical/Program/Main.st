@@ -1,16 +1,14 @@
 
-PROGRAM _INIT // Alt her bruges, må gerne få refactor men ikke ændre funktionalitet
+PROGRAM _INIT
 
 	Q_vel_cart := 0;
-	length := 0;
 	I_pos_pendulum;
 	reset_pendulum_position;
 	I_pos_cart;
 	reset_cart_position;
 	systemState := idle;
-	speed := -2000;
 	
-	scale := 1310;
+	scale := 2275;
 	
 END_PROGRAM
 
@@ -22,11 +20,24 @@ PROGRAM _CYCLIC
 	ELSE 
 		Q_drive_enable  := FALSE;
 		Q_reset_LED := FALSE;
+		systemState := idle;
 	END_IF
+	
+//	// Auto Reset Btn
+//	IF (NOT I_drive_no_fault) THEN
+//		Q_reset_LED := FALSE;
+//		Q_drive_faultreset := NOT Q_drive_faultreset;
+//	ELSE
+//		Q_reset_LED := TRUE;
+//	END_IF
 	
 	// Handle Reset Btn
 	IF(SI_reset_btn) THEN
-		Q_drive_faultreset := NOT Q_drive_faultreset;
+		count := count + 1;
+		IF (count = 10) THEN
+			Q_drive_faultreset := NOT Q_drive_faultreset;
+			count := 0;
+		END_IF
 	ELSIF I_drive_no_fault THEN
 		Q_reset_LED := TRUE;
 	ELSE
@@ -37,17 +48,36 @@ PROGRAM _CYCLIC
 	END_IF
 
 	CASE systemState OF // Main state machine
-		idle: // Bruges
+		idle:
 			resetTimer.IN := FALSE;
-			counter := 0;
 			Q_vel_cart := 0;
 			reset_pendulum_position := FALSE;
 			reset_cart_position := FALSE;
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
-			e_prev := 0;
-			Fd_prev := 0;
-			e_sum := 0;
+			// Cascade reset
+			referenceNext_cart := 0;
+			positionNext_cart := 0;
+			error_cart := 0;
+			errorNext_cart := 0;
+			outputNextI_cart := 0;
+			outputNextD_cart := 0;
+			outputD_cart := 0;
+			outputNext_cart := 0;
+			output_cart := 0;
+
+			angleNext_pen := 0;
+			errorNext_pen := 0;
+			error_pen := 0;
+			outputNextI_pen := 0;
+			outputNextD_pen := 0;
+			outputD_pen := 0;
+			outputNext_pen := 0;
+			output_pen := 0;
+			
+			// LQR reset
+			angle_pen := 0;
+			position_cart := 0;
 			
 		reset: // Bruges
 			IF NOT I_endstop_positive THEN
@@ -69,105 +99,62 @@ PROGRAM _CYCLIC
 			
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
-		manual: // Bruges ikke, var tænkt til kontrol med piletaster el.lign.
-			IF NOT I_endstop_negative THEN
-				systemState := idle;
-			END_IF
-			Q_vel_cart := -4000;
-			Q_drive_faultreset := NOT Q_drive_faultreset;
+		swing: 
 			
-		swing: // Bruges ikke, tænkt til "swing-up" sequence.
-			Q_vel_cart := speed;
-			counter := counter + 1;
-			IF (counter = 9) THEN
-				pos_start := I_pos_cart;
-				resetTimer.IN := TRUE;
-				resetTimer.PT := T#5s;
-			END_IF
-			
-			resetTimer();
-			
-			IF resetTimer.Q THEN
-				pos_end := I_pos_cart;
-				systemState := idle;
-			END_IF
-			
-			IF NOT I_endstop_negative THEN
-				systemState := idle;
-			END_IF
-			
-		controller: // Tidlig test controller, bør gemmes
-			IF (I_pos_pendulum > 1700 AND I_pos_pendulum < 2350) THEN
-				Q_vel_cart := speed * (DINT_TO_INT(I_pos_pendulum) - 2048);
-			ELSE
-				Q_vel_cart := 0;
-			END_IF
-			IF (Q_vel_cart > 10000) THEN
-				Q_vel_cart := 10000;
-			ELSIF (Q_vel_cart < -10000) THEN
-				Q_vel_cart := -10000;
-			END_IF
-			IF NOT I_endstop_positive OR NOT I_endstop_negative THEN
-				Q_vel_cart := 0;
-			END_IF
-			
-		PDcontroller: // MAIN PID CONTROLLER - NO TOUCH!
-			// Cart (outer loop)
-			Kp_cart := -0.00234 * 50;
-			Ki_cart := 0;
-			Kd_cart := -0.00468 * 50;
-			Tf_cart := 0.01;
-			Ts_cart := 0.002;
-			
-			pos_ref := 190000;
-			pos := I_pos_cart;
-			
-			e_cart := (pos_ref - pos) / 243500;
-			
-			e_sum_cart := e_sum_cart + (e_cart * Ts_cart);
-			
-			IF e_sum_cart > 100.0 THEN 
-				e_sum_cart := 100.0; 
-			ELSIF e_sum_cart < -100.0 THEN 
-				e_sum_cart := -100.0; 
-			END_IF
-			
-			Fd_cart := (Tf_cart / (Tf_cart + Ts_cart)) * Fd_prev_cart + (Kd_cart / (Tf_cart + Ts_cart)) * (e_cart - e_prev_cart);
-			
-			F_cart := Kp_cart * e_cart + Ki_cart * e_sum_cart + Fd_cart;
-			
-			e_prev_cart := e_cart;
-			Fd_prev_cart := Fd_cart;
-			
-			// Pendulum (inner loop)
-			Kp := 14.23031;
-			Ki := 63.24582;
-			Kd := 0.79057;
-			Tf := 0.01;
-			Ts := 0.002;
-			
-			theta_ref := -F_cart;
-			theta := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
-			
-			e := theta_ref - theta;
-			
-			e_sum := e_sum + (e * Ts);
-			
-			IF e_sum > 100.0 THEN 
-				e_sum := 100.0; 
-			ELSIF e_sum < -100.0 THEN 
-				e_sum := -100.0; 
-			END_IF
-			
-			Fd := (Tf / (Tf + Ts)) * Fd_prev + (Kd / (Tf + Ts)) * (e - e_prev);
-			
-			F := Kp * e + Ki * e_sum + Fd;
-			
-			e_prev := e;
-			Fd_prev := Fd;
+		cascade:
+			// Initial values - Ideally set these once, not every cycle
+			referenceNext_cart := 191000.0 / 243500.0; 
+
+			Kp_cart := -0.117;    // Adjusted to match your working "x50" gain
+			Ki_cart := 0.0;
+			Kd_cart := -0.234;    // Adjusted to match your working "x50" gain
+			Tf_cart := 0.01;      // Filter time constant
+
+			Kp_pen := 14.23031;
+			Ki_pen := 63.24582;
+			Kd_pen := 0.79057;
+			Tf_pen := 0.01;       // Filter time constant
+
+			T := 0.001;           // Sample time
+
+			// --- CART (Outer Loop) ---
+			positionNext_cart := I_pos_cart / 243500.0;
+			errorNext_cart := referenceNext_cart - positionNext_cart;
+
+			// Integral with T
+			outputNextI_cart := outputNextI_cart + Ki_cart * T * errorNext_cart;
+
+			// Filtered Derivative
+			outputNextD_cart := (Tf_cart / (Tf_cart + T)) * outputD_cart + (Kd_cart / (Tf_cart + T)) * (errorNext_cart - error_cart);
+
+			outputNext_cart := Kp_cart * errorNext_cart + outputNextI_cart + outputNextD_cart;
+
+			// Save state for next cycle
+			error_cart := errorNext_cart;
+			outputD_cart := outputNextD_cart;
+
+
+			// --- PENDULUM (Inner Loop) ---
+			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
+
+			// The Cart output defines the required tilt angle
+			errorNext_pen := -outputNext_cart - angleNext_pen;
+
+			// Integral with Anti-Windup
+			outputNextI_pen := outputNextI_pen + Ki_pen * T * errorNext_pen;
+			IF outputNextI_pen > 5.0 THEN outputNextI_pen := 5.0; ELSIF outputNextI_pen < -5.0 THEN outputNextI_pen := -5.0; END_IF
+
+			// Filtered Derivative
+			outputNextD_pen := (Tf_pen / (Tf_pen + T)) * outputD_pen + (Kd_pen / (Tf_pen + T)) * (errorNext_pen - error_pen);
+
+			outputNext_pen := Kp_pen * errorNext_pen + outputNextI_pen + outputNextD_pen;
+
+			// Save state for next cycle
+			error_pen := errorNext_pen;
+			outputD_pen := outputNextD_pen;
 			
 			IF (I_pos_pendulum > 1550 AND I_pos_pendulum < 2550) THEN
-				Q_vel_cart := REAL_TO_INT(F * scale);
+				Q_vel_cart := REAL_TO_INT(outputNext_pen * scale);
 			ELSE
 				Q_vel_cart := 0;
 				systemState := idle;
@@ -187,25 +174,61 @@ PROGRAM _CYCLIC
 				systemState := idle;
 			END_IF
 			
-			IF Q_vel_cart < 0 THEN
-				Q_vel_cart := Q_vel_cart - 1700;
-			ELSIF Q_vel_cart > 0 THEN
-				Q_vel_cart := Q_vel_cart + 1700;
+//			IF Q_vel_cart < 0 THEN
+//				Q_vel_cart := Q_vel_cart - 1000;
+//			ELSIF Q_vel_cart > 0 THEN
+//				Q_vel_cart := Q_vel_cart + 1000;
+//			END_IF
+			
+		lqr:
+			
+			K1 :=  -3.1058;
+			K2 := -11.5401;
+			K3 :=  33.7288;
+			K4 :=   5.1146;
+			
+			positionNext_cart := (I_pos_cart - 191000) / 243500.0;
+			velocity_cart := (((I_pos_cart - 191000) - position_cart ) / 243500.0 ) / 0.001;
+			
+			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
+			velocity_pen := (((I_pos_pendulum - 2048) - angle_pen ) * ((2 * amPI) / 4096)) / 0.001;
+			
+			force := -( K1 * positionNext_cart ) + ( K2 * velocity_cart ) + ( K3 * angleNext_pen ) + ( K4 * velocity_pen );
+			
+			position_cart := positionNext_cart;
+			angle_pen := angleNext_pen;
+			
+			IF (I_pos_pendulum > 1550 AND I_pos_pendulum < 2550) THEN
+				Q_vel_cart := REAL_TO_INT(force * scale);
+			ELSE
+				Q_vel_cart := 0;
+				systemState := idle;
+			END_IF
+			IF (Q_vel_cart > 12000) THEN
+				Q_vel_cart := 12000;
+			ELSIF (Q_vel_cart < -12000) THEN
+				Q_vel_cart := -12000;
+			END_IF
+			IF NOT I_endstop_positive OR NOT I_endstop_negative THEN
+				Q_vel_cart := 0;
+				systemState := idle;
 			END_IF
 			
-		
-		center: // Bruges til at bevæge til midten af båndet
-			Q_vel_cart := -4000;
-			IF (I_pos_cart > 190000) THEN
+			IF (I_pos_cart > 330000 OR I_pos_cart < 50000) THEN
+				Q_vel_cart := 0;
 				systemState := idle;
 			END_IF
 		
-		Preset: // Bruges til reset af pendul encoder
+		center:
+			Q_vel_cart := -4000;
+			IF (I_pos_cart > 191000) THEN
+				systemState := idle;
+			END_IF
+		
+		pendulReset:
 			reset_pendulum_position := TRUE;
 			systemState := idle;
-		
-					
-			
+						
 	END_CASE
 	 
 END_PROGRAM
