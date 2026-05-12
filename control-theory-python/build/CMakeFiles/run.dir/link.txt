@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/run.dir/main.cpp.o CMakeFiles/run.dir/open62541.c.o -o run  -lpthread 

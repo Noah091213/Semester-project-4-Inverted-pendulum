@@ -1,0 +1,78 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
+
+#include "open62541pp/client.hpp"
+#include "open62541pp/config.hpp"
+#include "open62541pp/server.hpp"
+#include "open62541pp/session.hpp"
+
+#include "helper/macros.hpp"  // UAPP_TSAN_ENABLED
+#include "helper/server_runner.hpp"
+
+using namespace opcua;
+
+constexpr std::string_view localServerUrl{"opc.tcp://localhost:4840"};
+
+TEST_CASE("Session") {
+    Server server;
+    ServerRunner serverRunner{server};
+    Client client;
+
+    SECTION("Construct") {
+        const NodeId sessionId{1, 1000};
+        int sessionContext = 11;
+        Session session{server, sessionId, &sessionContext};
+
+        CHECK(session.connection() == server);
+        CHECK(std::as_const(session).connection() == server);
+
+        CHECK(session.id() == sessionId);
+
+        CHECK(session.context() == &sessionContext);
+        CHECK(std::as_const(session).context() == &sessionContext);
+    }
+
+#if UAPP_OPEN62541_VER_GE(1, 3)
+    SECTION("Get active session") {
+        CHECK(server.sessions().empty());
+        client.connect(localServerUrl);
+        CHECK(server.sessions().size() == 1);
+        client.disconnect();
+        CHECK(server.sessions().empty());
+    }
+
+    SECTION("Session attributes") {
+        client.connect(localServerUrl);
+        auto session = server.sessions().at(0);
+
+        const QualifiedName key{0, "testAttribute"};
+        CHECK_THROWS_WITH(session.getSessionAttribute(key), "BadNotFound");
+
+        CHECK_NOTHROW(session.setSessionAttribute(key, Variant(11.11)));
+        CHECK(session.getSessionAttribute(key).scalar<double>() == 11.11);
+
+        // retry with newly created session object
+        CHECK(server.sessions().at(0).getSessionAttribute(key).scalar<double>() == 11.11);
+
+        // delete session attribute
+        CHECK_NOTHROW(session.deleteSessionAttribute(key));
+        CHECK_THROWS_WITH(session.getSessionAttribute(key), "BadNotFound");
+    }
+
+    SECTION("Close session") {
+        // thread sanitizer error in UA_Server_closeSession function despite mutex
+        // false? bug in open62541?
+#ifndef UAPP_TSAN_ENABLED
+        client.connect(localServerUrl);
+        auto session = server.sessions().at(0);
+        CHECK_NOTHROW(session.close());
+        CHECK_THROWS_WITH(session.close(), "BadSessionIdInvalid");
+#endif
+    }
+#endif
+
+    SECTION("Equality") {
+        CHECK(Session(server, {1, 1000}, nullptr) == Session(server, {1, 1000}, nullptr));
+        CHECK(Session(server, {1, 1000}, nullptr) != Session(server, {1, 1001}, nullptr));
+    }
+}

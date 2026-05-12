@@ -1,0 +1,113 @@
+# Project related configuration options
+PROJECT_NAME           = "${PROJECT_NAME}"
+PROJECT_NUMBER         = "${PROJECT_VERSION}"
+PROJECT_BRIEF          = "${PROJECT_DESCRIPTION}"
+PROJECT_LOGO           =
+
+OUTPUT_DIRECTORY       = "${doxygen_output_dir}"
+OUTPUT_LANGUAGE        = English
+BRIEF_MEMBER_DESC      = NO
+JAVADOC_AUTOBRIEF      = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+USE_MDFILE_AS_MAINPAGE = "${PROJECT_SOURCE_DIR}/README.md"
+ALIASES                = completiontoken{1}="^^ \
+                         The @ref async_model \"completion token\" that will be used to produce a completion handler, which will be called when the operation completes. \
+                         Potential completion tokens include @ref useFuture, @ref useDeferred, @ref useDetached, or a function (object) with the correct completion signature. \
+                         The function signature of the completion handler must be: \
+                         @code ^^ \1 ^^ @endcode"
+ALIASES               += asyncresult{1}="^^ \
+                         - `void` if `token` is a callback function (object) ^^ \
+                         - `std::future<\1>` if `token` is of type UseFutureToken ^^ \
+                         - `auto(auto&& token)` callable for deferred execution if `token` is of type UseDeferredToken ^^ \
+                         - `void` if `token` is of type UseDetachedToken"
+ALIASES               += wrapper{1}="@copybrief \1 ^^ @see \1"
+
+# Build-related options
+EXTRACT_ALL            = YES
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+SHOW_USED_FILES        = NO
+SORT_MEMBER_DOCS       = YES
+LAYOUT_FILE            = "${CMAKE_CURRENT_SOURCE_DIR}/DoxygenLayout.xml"
+QUIET                  = YES
+WARN_IF_INCOMPLETE_DOC = NO
+
+# Input files
+INPUT                  = "${PROJECT_SOURCE_DIR}/include/" \
+                         "${PROJECT_SOURCE_DIR}/README.md" \
+                         "${CMAKE_CURRENT_SOURCE_DIR}/"
+FILE_PATTERNS          = *.h *.hpp *.cpp *.dox *.md
+RECURSIVE              = YES
+EXCLUDE_SYMBOLS        = opcua::detail \
+                         opcua::*::detail
+EXAMPLE_PATH           = "${PROJECT_SOURCE_DIR}/examples" \
+                         "${CMAKE_CURRENT_SOURCE_DIR}/fragments"
+EXAMPLE_PATTERNS       = *.h *.hpp *.cpp
+EXAMPLE_RECURSIVE      = YES
+
+# Source browsing
+SOURCE_BROWSER         = YES
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = NO
+REFERENCES_LINK_SOURCE = YES
+STRIP_CODE_COMMENTS    = NO
+
+# Output
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_HTML          = YES
+GENERATE_XML           = NO
+
+HTML_HEADER            = "${CMAKE_CURRENT_SOURCE_DIR}/header.html"
+HTML_EXTRA_STYLESHEET  = "${PROJECT_SOURCE_DIR}/3rdparty/doxygen-awesome-css/doxygen-awesome.css" \
+                         "${CMAKE_CURRENT_SOURCE_DIR}/custom.css"
+HTML_EXTRA_FILES       = "${CMAKE_CURRENT_SOURCE_DIR}/googleeace6f5ccc88b340.html"
+HTML_DYNAMIC_MENUS     = YES
+HTML_DYNAMIC_SECTIONS  = NO
+HTML_OUTPUT            = "${doxygen_html_dir}"
+HTML_COLORSTYLE        = LIGHT
+
+SITEMAP_URL            = "https://open62541pp.github.io/open62541pp/"
+ENUM_VALUES_PER_LINE   = 0
+GENERATE_TREEVIEW      = NO
+TREEVIEW_WIDTH         = 300
+EXT_LINKS_IN_WINDOW    = YES
+
+# Preprocessor
+MACRO_EXPANSION        = YES
+PREDEFINED             = UA_ENABLE_DA \
+                         UA_ENABLE_DISCOVERY \
+                         UA_ENABLE_ENCRYPTION \
+                         UA_ENABLE_HISTORIZING \
+                         UA_ENABLE_METHODCALLS \
+                         UA_ENABLE_NODEMANAGEMENT \
+                         UA_ENABLE_PUBSUB \
+                         UA_ENABLE_QUERY \
+                         UA_ENABLE_SUBSCRIPTIONS \
+                         UA_ENABLE_SUBSCRIPTIONS_EVENTS \
+                         UA_ENABLE_TYPEDESCRIPTION \
+                         UAPP_HAS_TYPEDESCRIPTION=1 \
+                         UAPP_HAS_PARSING=1 \
+                         UAPP_HAS_TOSTRING=1 \
+                         UAPP_HAS_ORDER=1 \
+                         UAPP_HAS_DATAACCESS=1 \
+                         UAPP_HAS_ASYNC_OPERATIONS=1 \
+                         UAPP_HAS_ASYNC_SUBSCRIPTIONS=1 \
+                         UAPP_HAS_CREATE_CERTIFICATE=1 \
+                         UAPP_HAS_NODESETLOADER=1
+
+# Dot diagrams
+HAVE_DOT               = YES
+DOT_IMAGE_FORMAT       = svg
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = NO
+DIRECTORY_GRAPH        = NO
+
+# External references
+# open62541 html documentation in "open62541" subdirectory
+TAGFILES               = "${doxygen_open62541_tagfile}=open62541"

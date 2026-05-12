@@ -1,0 +1,42 @@
+name: Package
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  cmake:
+    name: CMake package (${{ matrix.build-type }}, ${{ matrix.library-type }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: true
+      matrix:
+        build-type:
+          - Debug
+          - Release
+        library-type:
+          - static
+          - shared
+    env:
+      CMAKE_GENERATOR: Ninja
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Build and install open62541 & open62541pp
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DBUILD_SHARED_LIBS=${{ matrix.library-type == 'shared' }} \
+            ..
+          cmake --build .
+          sudo cmake --install .
+      - name: Build examples (stand-alone)
+        run: |
+          mkdir build_examples
+          cd build_examples
+          cmake -G Ninja --debug-find ../examples
+          cmake --build .

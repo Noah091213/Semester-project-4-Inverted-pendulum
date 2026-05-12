@@ -1,0 +1,93 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "dev",
+            "inherits": [
+                "base"
+            ],
+            "installDir": "${sourceDir}/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "OFF",
+                "UA_MULTITHREADING": "100",
+                "UAPP_BUILD_TESTS": "ON",
+                "UAPP_WARNINGS_AS_ERRORS": "ON",
+                "UAPP_ENABLE_SANITIZER_UNDEFINED": "ON"
+            }
+        },
+        {
+            "name": "dev-asan",
+            "inherits": [
+                "dev"
+            ],
+            "cacheVariables": {
+                "UAPP_ENABLE_SANITIZER_ADDRESS": "ON"
+            }
+        },
+        {
+            "name": "dev-tsan",
+            "inherits": [
+                "dev"
+            ],
+            "cacheVariables": {
+                "UAPP_ENABLE_SANITIZER_THREAD": "ON"
+            }
+        },
+        {
+            "name": "dev-lint",
+            "inherits": [
+                "dev"
+            ],
+            "cacheVariables": {
+                "CMAKE_CXX_CLANG_TIDY": "clang-tidy;-warnings-as-errors=*"
+            }
+        },
+        {
+            "name": "dev-iwyu",
+            "inherits": [
+                "dev"
+            ],
+            "cacheVariables": {
+                "CMAKE_CXX_INCLUDE_WHAT_YOU_USE": "iwyu;-Xiwyu;--mapping_file=${sourceDir}/.open62541pp.imp;--no_fwd_decls"
+            }
+        },
+        {
+            "name": "examples",
+            "inherits": [
+                "base"
+            ],
+            "cacheVariables": {
+                "UAPP_BUILD_EXAMPLES": "ON"
+            }
+        },
+        {
+            "name": "doc",
+            "inherits": [
+                "base"
+            ],
+            "cacheVariables": {
+                "UAPP_BUILD_DOCUMENTATION": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "inherits": [
+                "base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}
