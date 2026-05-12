@@ -1,8 +1,16 @@
 VAR
+	alpha : REAL;
+	filt_pen : REAL;
+	filt_cart : REAL;
 	K3 : REAL;
 	K4 : REAL;
 	K2 : REAL;
 	count : USINT := 0;
+	var1 : REAL;
+	var2 : REAL;
+	var3 : REAL;
+	var4 : REAL;
+	var0 : REAL;
 	K1 : REAL;
 	Tf_cart : REAL;
 	led_ton : TON;

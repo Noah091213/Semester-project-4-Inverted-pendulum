@@ -8,6 +8,7 @@ PROGRAM _INIT
 	reset_cart_position;
 	systemState := idle;
 	
+	alpha := 0.2;
 	scale := 2275;
 	
 END_PROGRAM
@@ -55,6 +56,9 @@ PROGRAM _CYCLIC
 			reset_cart_position := FALSE;
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
+			var0 := 0;
+			var1 := 0;
+			
 			// Cascade reset
 			referenceNext_cart := 0;
 			positionNext_cart := 0;
@@ -78,6 +82,8 @@ PROGRAM _CYCLIC
 			// LQR reset
 			angle_pen := 0;
 			position_cart := 0;
+			filt_cart := 0;
+			filt_pen := 0;
 			
 		reset: // Bruges
 			IF NOT I_endstop_positive THEN
@@ -102,6 +108,8 @@ PROGRAM _CYCLIC
 		swing: 
 			
 		cascade:
+			var0 := 1;
+			
 			// Initial values - Ideally set these once, not every cycle
 			referenceNext_cart := 191000.0 / 243500.0; 
 
@@ -148,6 +156,9 @@ PROGRAM _CYCLIC
 			outputNextD_pen := (Tf_pen / (Tf_pen + T)) * outputD_pen + (Kd_pen / (Tf_pen + T)) * (errorNext_pen - error_pen);
 
 			outputNext_pen := Kp_pen * errorNext_pen + outputNextI_pen + outputNextD_pen;
+			
+			// Output = force
+			force := outputNext_pen;
 
 			// Save state for next cycle
 			error_pen := errorNext_pen;
@@ -182,18 +193,23 @@ PROGRAM _CYCLIC
 			
 		lqr:
 			
-			K1 :=  -3.1058;
-			K2 := -11.5401;
-			K3 :=  33.7288;
-			K4 :=   5.1146;
+			var0 := 2;
+			
+			K1 :=  -27.0;
+			K2 :=  -32.5;
+			K3 :=   126.2;
+			K4 :=   14.6;
 			
 			positionNext_cart := (I_pos_cart - 191000) / 243500.0;
-			velocity_cart := (((I_pos_cart - 191000) - position_cart ) / 243500.0 ) / 0.001;
+			velocity_cart := (positionNext_cart - position_cart) / 0.001;
 			
 			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
-			velocity_pen := (((I_pos_pendulum - 2048) - angle_pen ) * ((2 * amPI) / 4096)) / 0.001;
+			velocity_pen := (angleNext_pen - angle_pen) / 0.001;
 			
-			force := -( K1 * positionNext_cart ) + ( K2 * velocity_cart ) + ( K3 * angleNext_pen ) + ( K4 * velocity_pen );
+			filt_cart := (alpha * velocity_cart) + (( 1.0 - alpha) * filt_cart);
+			filt_pen := (alpha * velocity_pen) + ((1.0 - alpha) * filt_pen);
+			
+			force := - (( K1 * positionNext_cart ) + ( K2 * filt_cart ) + ( K3 * angleNext_pen ) + ( K4 * filt_pen ));
 			
 			position_cart := positionNext_cart;
 			angle_pen := angleNext_pen;
@@ -204,10 +220,10 @@ PROGRAM _CYCLIC
 				Q_vel_cart := 0;
 				systemState := idle;
 			END_IF
-			IF (Q_vel_cart > 12000) THEN
-				Q_vel_cart := 12000;
-			ELSIF (Q_vel_cart < -12000) THEN
-				Q_vel_cart := -12000;
+			IF (Q_vel_cart > 20000) THEN
+				Q_vel_cart := 20000;
+			ELSIF (Q_vel_cart < -20000) THEN
+				Q_vel_cart := -20000;
 			END_IF
 			IF NOT I_endstop_positive OR NOT I_endstop_negative THEN
 				Q_vel_cart := 0;
@@ -230,6 +246,12 @@ PROGRAM _CYCLIC
 			systemState := idle;
 						
 	END_CASE
+	
+	var1 := var1 + 1;
+	var2 := I_pos_cart;
+	var3 := I_pos_pendulum;
+	var4 := force;
+	
 	 
 END_PROGRAM
 
