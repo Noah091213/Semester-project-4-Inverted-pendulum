@@ -30,7 +30,7 @@ The following assumptions were made during the modelling process:
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.38\textwidth]{Figures/system_model.png}
+	\includegraphics[width=0.38\textwidth]{Figures/free_body.png}
 	\caption{Simplified model of the inverted pendulum system showing the generalized coordinates, pendulum angle, and input force.}
 	\label{fig:system_model}
 \end{figure}
@@ -44,7 +44,7 @@ The following assumptions were made during the modelling process:
 	
 	\renewcommand{\arraystretch}{1.25}
 	
-	\begin{tabular}{clcc}
+	\begin{tabular}{clrl}
 		\toprule
 		
 		\rowcolor{darkpurple}
@@ -55,7 +55,7 @@ The following assumptions were made during the modelling process:
 		
 		\midrule
 		
-		$M$ & Mass of cart & 0.5 & kg \\
+		$M$ & Mass of cart & 0.500 & kg \\
 		$m$ & Mass of pendulum (including tip mass) & 0.084 & kg \\
 		$l$ & Length of pendulum rod & 0.35 & m \\
 		$L_{belt}$ & Length of conveyor belt & 1.72 & m \\
@@ -75,7 +75,7 @@ The Newton-Euler method is based on applying Newton’s second law and rotationa
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.38\textwidth]{Figures/free_body.png}
+	\includegraphics[width=0.38\textwidth]{Figures/system_model.png}
 	\caption{Free body diagram of the inverted pendulum system showing the applied force, gravitational forces, damping effects, and normal force acting on the system.}
 	\label{fig:fbd}
 \end{figure}
@@ -308,6 +308,6 @@ The Euler-Lagrange method provided a more systematic and compact mathematical fo
 
 The final linearized model obtained from the derivations was used as the foundation for the controller design and simulations presented later in this project.
 
-The final linearized model was implemented in MATLAB/Simulink and used for simulation and controller development. Both transfer function and state-space representations were used throughout the project for analysis and validation of the implemented controllers.
+The final linearized model was implemented in MATLAB/Python and used for simulation and controller development. Both transfer function and state-space representations were used throughout the project for analysis and validation of the implemented controllers.
 
 The derived model forms the basis for the PID controllers, pole-placement controller, and the discrete implementation used later in the project.
