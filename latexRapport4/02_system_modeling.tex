@@ -1,2 +1,142 @@
 \chapter{System modeling}
 \label{chap:system modeling}
+\section{Modelling of the Inverted Pendulum System}
+
+\subsection{System description}
+
+The purpose of the modelling process is to obtain a mathematical representation of the inverted pendulum system, which can later be used for simulation and controller design. A mathematical model makes it possible to analyze the dynamic behavior of the system and evaluate different control strategies before implementation on the physical setup.
+
+In this project, two classical modelling approaches were used: the Newton-Euler method and the Euler-Lagrange method. Both methods describe the dynamics of the system, but from different physical perspectives. The Newton-Euler method is based on force and moment balances, while the Euler-Lagrange method is based on the kinetic and potential energy of the system. The resulting nonlinear equations were linearized around the upright equilibrium position to simplify the controller design and implementation in MATLAB/Python.
+
+The physical system consists of a cart with an attached inverted pendulum with an additional weight mounted on top of it. The cart is constrained to move horizontally along a conveyor-driven rail, while the pendulum is free to rotate around its pivot point. The system is actuated by an external force $F$, which controls the horizontal movement of the cart. The goal of the system is to keep the pendulum balanced in its upright position while controlling the motion of the cart.
+
+The generalized coordinates used to describe the system are:
+
+\begin{itemize}
+	\item $x$: horizontal cart position
+	\item $\theta$: pendulum angle relative to the vertical axis
+\end{itemize}
+
+The following assumptions were made during the modelling process:
+
+\begin{itemize}
+	\item The pendulum rod is considered rigid
+	\item Friction is assumed to be small and primarily represented by damping coefficients
+	\item The pendulum motion is constrained to a two-dimensional plane
+	\item The system is linearized around the upright equilibrium position
+\end{itemize}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\textwidth]{Figures/system_model.png}
+	\caption{Simplified model of the inverted pendulum system showing the generalized coordinates, pendulum angle, and input force.}
+	\label{fig:system_model}
+\end{figure}
+
+\begin{table}[H]
+	\centering
+	\caption{System parameters}
+	\begin{tabular}{|l|c|}
+		\hline
+		Parameter & Value \\ \hline
+		Mass of cart & 0.5 [kg] \\ \hline
+		Mass of rod & 0.082 [kg] \\ \hline
+		Mass of attached weight & 0.002 [kg] \\ \hline
+		Mass of pendulum & 0.084 [kg] \\ \hline
+		Length of rod & 0.35 [m] \\ \hline
+		Length of conveyor belt & 1.72 [m] \\ \hline
+		Radius of belt rollers & 0.05 [m] \\ \hline
+		Gravitational acceleration & 9.82 [m/s$^2$] \\ \hline
+		Linear damping coefficient & 5 [N/(m/s)] \\ \hline
+		Rotational damping coefficient & 0.0012 [Nm/(rad/s)] \\ \hline
+	\end{tabular}
+	\label{tab:parameters}
+\end{table}
+
+\subsection{Newton-Euler Modelling}
+
+The Newton-Euler method is based on applying Newton’s second law and rotational moment equations to the system. Free body diagrams were constructed for both the cart and the pendulum to identify the forces and moments acting on the system.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\textwidth]{Figures/free_body.png}
+	\caption{Free body diagram of the inverted pendulum system showing the applied force, gravitational forces, damping effects, and normal force acting on the system.}
+	\label{fig:fbd}
+\end{figure}
+
+For the cart, the sum of forces in the horizontal direction was established using Newton’s second law:
+
+\begin{equation}
+	\sum F_x = M\ddot{x}
+\end{equation}
+
+The obtained equations contain nonlinear trigonometric terms originating from the pendulum rotation. To simplify the controller design, the equations were linearized around the upright equilibrium position using the small-angle approximations:
+
+\begin{equation}
+	\sin(\theta) \approx \theta
+\end{equation}
+
+\begin{equation}
+	\cos(\theta) \approx 1
+\end{equation}
+
+\subsubsection{Final Linearized Model}
+
+\begin{equation}
+	(I + ml^2)\ddot{\theta} - mgl\theta = ml\ddot{x}
+\end{equation}
+
+\begin{equation}
+	(M+m)\ddot{x} + b\dot{x} - ml\ddot{\theta} = u
+\end{equation}
+
+\subsubsection{State-Space Representation}
+
+\begin{equation}
+	\dot{x} = Ax + Bu
+\end{equation}
+
+\begin{equation}
+	y = Cx + Du
+\end{equation}
+
+% INSERT FULL MATRICES HERE
+
+\subsection{Euler-Lagrange Modelling}
+
+The Euler-Lagrange method describes the system dynamics using energy relationships instead of direct force balances.
+
+The kinetic energy of the cart is given by:
+
+\begin{equation}
+	T_{cart} = \frac{1}{2}M\dot{x}^2
+\end{equation}
+
+Using the derived expressions for kinetic and potential energy, the Lagrangian was formulated as:
+
+\begin{equation}
+	L = T - V
+\end{equation}
+
+The equations of motion were then derived using the Euler-Lagrange equation:
+
+\begin{equation}
+	\frac{d}{dt}
+	\left(
+	\frac{\partial L}{\partial \dot{q}_i}
+	\right)
+	-
+	\frac{\partial L}{\partial q_i}
+	=
+	Q_i
+\end{equation}
+
+\subsection{Comparison of the Methods}
+
+Both modelling approaches resulted in equivalent dynamic models after linearization, verifying the correctness of the derivations.
+
+The Newton-Euler method provided a more intuitive understanding of the physical forces and moments acting on the system, since it directly uses force and torque balances. However, the method becomes increasingly complex for systems with multiple interconnected bodies.
+
+The Euler-Lagrange method provided a more systematic and compact mathematical formulation by describing the system through energy relationships.
+
+The final linearized model was implemented in MATLAB/Python and used for simulation and controller development. The derived model forms the basis for the PID controllers, pole-placement controller, and the discrete implementation used later in the project.
