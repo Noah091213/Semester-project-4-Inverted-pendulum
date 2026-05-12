@@ -10,6 +10,16 @@ VAR
 	var2 : REAL;
 	var3 : REAL;
 	var4 : REAL;
+	anglePos2 : REAL;
+	anglePos3 : REAL;
+	anglePos4 : REAL;
+	anglePos5 : REAL;
+	pos2 : REAL;
+	pos3 : REAL;
+	pos4 : REAL;
+	pos5 : REAL;
+	pos1 : REAL;
+	anglePos1 : REAL;
 	var0 : REAL;
 	K1 : REAL;
 	Tf_cart : REAL;

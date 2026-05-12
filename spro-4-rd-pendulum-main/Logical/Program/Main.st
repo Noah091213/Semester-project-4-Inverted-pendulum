@@ -8,7 +8,7 @@ PROGRAM _INIT
 	reset_cart_position;
 	systemState := idle;
 	
-	alpha := 0.2;
+	alpha := 1.0;
 	scale := 2275;
 	
 END_PROGRAM
@@ -84,6 +84,18 @@ PROGRAM _CYCLIC
 			position_cart := 0;
 			filt_cart := 0;
 			filt_pen := 0;
+			
+			pos1 := 0;
+			pos2 := 0;
+			pos3 := 0;
+			pos4 := 0;
+			pos5 := 0;
+			
+			anglePos1 := 0;
+			anglePos2 := 0;
+			anglePos3 := 0;
+			anglePos4 := 0;
+			anglePos5 := 0;
 			
 		reset: // Bruges
 			IF NOT I_endstop_positive THEN
@@ -196,15 +208,15 @@ PROGRAM _CYCLIC
 			var0 := 2;
 			
 			K1 :=  -27.0;
-			K2 :=  -32.5;
+			K2 :=  -3.25;
 			K3 :=   126.2;
-			K4 :=   14.6;
+			K4 :=   1.46;
 			
 			positionNext_cart := (I_pos_cart - 191000) / 243500.0;
-			velocity_cart := (positionNext_cart - position_cart) / 0.001;
+			velocity_cart := (positionNext_cart - pos5) / 0.005;
 			
 			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
-			velocity_pen := (angleNext_pen - angle_pen) / 0.001;
+			velocity_pen := (angleNext_pen - anglePos5) / 0.005;
 			
 			filt_cart := (alpha * velocity_cart) + (( 1.0 - alpha) * filt_cart);
 			filt_pen := (alpha * velocity_pen) + ((1.0 - alpha) * filt_pen);
@@ -213,6 +225,19 @@ PROGRAM _CYCLIC
 			
 			position_cart := positionNext_cart;
 			angle_pen := angleNext_pen;
+			
+			pos5 := pos4;
+			pos4 := pos3;
+			pos3 := pos2;
+			pos2 := pos1;
+			pos1 := positionNext_cart;
+			
+			anglePos5 := anglePos4;
+			anglePos4 := anglePos3;
+			anglePos3 := anglePos2;
+			anglePos2 := anglePos1;
+			anglePos1 := angleNext_pen;
+			
 			
 			IF (I_pos_pendulum > 1550 AND I_pos_pendulum < 2550) THEN
 				Q_vel_cart := REAL_TO_INT(force * scale);

@@ -5,7 +5,7 @@ from asyncua import Client, ua
 
 url = "opc.tcp://192.168.8.101:4841"
 namespace = "urn:B&R/pv/"
-DURATION = 30  # Total recording time
+DURATION = 20  # Total recording time
 SAMPLE_RATE = 0.001  # 5ms loop timer
 
 async def main():
@@ -50,7 +50,7 @@ async def main():
 
         # Save to CSV
         print(f"Saving {len(data_rows)} rows to pendulum_data.csv...")
-        with open("pendulum_data.csv", "w", newline="") as f:
+        with open(r"G:\My Drive\Uddannelse\SDU\Semester-project-4-Inverted-pendulum\pendulum_data.csv", "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["Timestamp"] + list(nodes.keys()))
             writer.writeheader()
             writer.writerows(data_rows)
