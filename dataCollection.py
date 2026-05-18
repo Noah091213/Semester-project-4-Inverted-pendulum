@@ -15,11 +15,11 @@ async def main():
         
         # Get all 4 nodes
         nodes = {
-            "Type": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:var0"),
-            "Step": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:var1"),
-            "Position": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:var2"),
-            "Angle": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:var3"),
-            "Force": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:var4")
+            "State": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:opc_state"),
+            "Step": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:opc_step"),
+            "X": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:opc_x"),
+            "Theta": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:opc_theta"),
+            "U": await client.nodes.root.get_child(f"0:Objects/4:PLC/6:Modules/6:::/6:Program/6:opc_u")
         }
 
         data_rows = []

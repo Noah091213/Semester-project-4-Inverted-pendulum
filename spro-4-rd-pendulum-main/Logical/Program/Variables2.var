@@ -1,0 +1,11 @@
+VAR
+	m_p : REAL := 0.084;
+	g : REAL := 9.82;
+	l : REAL := 0.175;
+	I_p : REAL := 0.002572;
+	energy_gain : REAL := 13;
+	energy : REAL;
+	error_energy : REAL;
+	theta_cos : REAL;
+	direction : REAL;
+END_VAR

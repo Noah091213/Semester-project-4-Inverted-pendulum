@@ -8,6 +8,8 @@ TYPE
 		pendulReset,
 		center,
 		cascade,
-		lqr
+		lqr,
+		lqi,
+		swingWait
 		);
 END_TYPE

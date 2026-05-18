@@ -1,19 +1,41 @@
 
 PROGRAM _INIT
-
+	
 	Q_vel_cart := 0;
 	I_pos_pendulum;
 	reset_pendulum_position;
 	I_pos_cart;
 	reset_cart_position;
-	systemState := idle;
-	
-	alpha := 1.0;
-	scale := 2275;
+
+	// PID K Values
+	Kp_cart := -0.117;
+	Ki_cart := 0.0;
+	Kd_cart := -0.234;
+
+	Kp_pen := 14.23031;
+	Ki_pen := 63.24582;
+	Kd_pen := 0.79057;
 	
 END_PROGRAM
 
 PROGRAM _CYCLIC
+	
+	// LQR/LQI calculations
+	x := (I_pos_cart - x_enc_middle) / x_enc_scale;
+	x_dot := (x - x_old) / Ts;
+			
+	theta := ((I_pos_pendulum) - theta_enc_middle) * theta_enc_scale;
+	IF theta > 3.14159274 THEN
+		theta := theta - 6.28318;
+	ELSIF theta < -3.14159274 THEN
+		theta := theta + 6.28318;
+	END_IF
+	theta_dot := (theta - theta_old) / Ts;
+			
+	filt_x_dot := (alpha * x_dot) + (( 1.0 - alpha) * filt_x_dot);
+	filt_theta_dot := (alpha * theta_dot) + ((1.0 - alpha) * filt_theta_dot);
+	
+	theta_cos := COS(theta);
 
 	// Handle EStop
 	IF(SI_estop_A AND SI_estop_B) THEN
@@ -23,14 +45,6 @@ PROGRAM _CYCLIC
 		Q_reset_LED := FALSE;
 		systemState := idle;
 	END_IF
-	
-//	// Auto Reset Btn
-//	IF (NOT I_drive_no_fault) THEN
-//		Q_reset_LED := FALSE;
-//		Q_drive_faultreset := NOT Q_drive_faultreset;
-//	ELSE
-//		Q_reset_LED := TRUE;
-//	END_IF
 	
 	// Handle Reset Btn
 	IF(SI_reset_btn) THEN
@@ -56,48 +70,37 @@ PROGRAM _CYCLIC
 			reset_cart_position := FALSE;
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
-			var0 := 0;
-			var1 := 0;
+			count := 0;
+			
+			opc_state := 0;
+			opc_step := 0;
 			
 			// Cascade reset
-			referenceNext_cart := 0;
-			positionNext_cart := 0;
-			error_cart := 0;
-			errorNext_cart := 0;
-			outputNextI_cart := 0;
-			outputNextD_cart := 0;
-			outputD_cart := 0;
-			outputNext_cart := 0;
-			output_cart := 0;
-
-			angleNext_pen := 0;
-			errorNext_pen := 0;
-			error_pen := 0;
-			outputNextI_pen := 0;
-			outputNextD_pen := 0;
-			outputD_pen := 0;
-			outputNext_pen := 0;
-			output_pen := 0;
+			x := 0;
+			error_x_old := 0;
+			error_x := 0;
+			u_i_cart := 0;
+			u_d_cart := 0;
+			u_d_old_cart := 0;
+			u_cart := 0;
+			
+			error_theta := 0;
+			error_theta_old := 0;
+			u_i_pen := 0;
+			u_d_pen := 0;
+			u_d_old_pen := 0;
+			u := 0;
 			
 			// LQR reset
-			angle_pen := 0;
-			position_cart := 0;
-			filt_cart := 0;
-			filt_pen := 0;
+			x := 0;
+			theta_old := 0;
+			x_old := 0;
+			x_dot := 0;
+			theta_dot := 0;
+			filt_x_dot := 0;
+			filt_theta_dot := 0;
 			
-			pos1 := 0;
-			pos2 := 0;
-			pos3 := 0;
-			pos4 := 0;
-			pos5 := 0;
-			
-			anglePos1 := 0;
-			anglePos2 := 0;
-			anglePos3 := 0;
-			anglePos4 := 0;
-			anglePos5 := 0;
-			
-		reset: // Bruges
+		reset: // Position reset
 			IF NOT I_endstop_positive THEN
 				Q_vel_cart := 0;
 			ELSE
@@ -109,173 +112,172 @@ PROGRAM _CYCLIC
 			resetTimer();
 			
 			IF resetTimer.Q THEN
-				reset_pendulum_position := TRUE;
 				reset_cart_position := TRUE;
 				
-				systemState := idle;
+				systemState := center;
+				
+				resetTimer.IN := FALSE;
 			END_IF
 			
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
-		swing: 
+		swingWait:
+			Q_vel_cart := 0;
+			
+			resetTimer.IN := (theta < -1.6 AND theta > -4.7); // Timer counts as long as vel is 0
+			resetTimer.PT := T#1s; // Timer set to 1 second
+			resetTimer();
+			
+			IF resetTimer.Q THEN
+				systemState := swing;
+				
+				resetTimer.IN := FALSE;
+			END_IF
+			
+		swing:
+			// 1. Calculate Total Energy (Kinetic + Potential)
+			energy := (0.5 * I_p * filt_theta_dot * filt_theta_dot) + (m_p * g * l * (theta_cos - 1.0));
+
+			// 2. Compute Energy Error (Target is 0.0 energy at the top)
+			error_energy := 0.0 - energy;
+
+			// 3. Determine push direction based on movement phase
+			IF (filt_theta_dot * theta_cos) > 0.0 THEN
+				direction := 1.0;
+			ELSIF (filt_theta_dot * theta_cos) < 0.0 THEN
+				direction := -1.0;
+			ELSE
+				direction := 0.0;
+			END_IF
+			
+			// 4. Calculate Control Effort
+			u := energy_gain * error_energy * direction;
+			
+			// --- CATCH CONDITION ---
+			// If angle is within ~35 degrees (0.61 rad) and velocity is low enough
+			IF (ABS(theta) < 0.45) AND (ABS(theta_dot) < 3.5) THEN
+				systemState := controller;
+			END_IF
 			
 		cascade:
-			var0 := 1;
-			
-			// Initial values - Ideally set these once, not every cycle
-			referenceNext_cart := 191000.0 / 243500.0; 
-
-			Kp_cart := -0.117;    // Adjusted to match your working "x50" gain
-			Ki_cart := 0.0;
-			Kd_cart := -0.234;    // Adjusted to match your working "x50" gain
-			Tf_cart := 0.01;      // Filter time constant
-
-			Kp_pen := 14.23031;
-			Ki_pen := 63.24582;
-			Kd_pen := 0.79057;
-			Tf_pen := 0.01;       // Filter time constant
-
-			T := 0.001;           // Sample time
+			opc_state := 10;
 
 			// --- CART (Outer Loop) ---
-			positionNext_cart := I_pos_cart / 243500.0;
-			errorNext_cart := referenceNext_cart - positionNext_cart;
+			x := I_pos_cart / x_enc_scale;
+			error_x := (x_enc_middle / x_enc_scale) - x;
 
-			// Integral with T
-			outputNextI_cart := outputNextI_cart + Ki_cart * T * errorNext_cart;
+			// Integral with Ts
+			u_i_cart := u_i_cart + Ki_cart * Ts * error_x;
 
 			// Filtered Derivative
-			outputNextD_cart := (Tf_cart / (Tf_cart + T)) * outputD_cart + (Kd_cart / (Tf_cart + T)) * (errorNext_cart - error_cart);
+			u_d_cart := (Tf / (Tf + Ts)) * u_d_old_cart + (Kd_cart / (Tf + Ts)) * (error_x - error_x_old);
 
-			outputNext_cart := Kp_cart * errorNext_cart + outputNextI_cart + outputNextD_cart;
+			u_cart := Kp_cart * error_x + u_i_cart + u_d_cart;
 
 			// Save state for next cycle
-			error_cart := errorNext_cart;
-			outputD_cart := outputNextD_cart;
+			error_x_old := error_x;
+			u_d_old_cart := u_d_cart;
 
 
 			// --- PENDULUM (Inner Loop) ---
-			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
+			theta := (I_pos_pendulum - theta_enc_middle) * theta_enc_scale;
 
 			// The Cart output defines the required tilt angle
-			errorNext_pen := -outputNext_cart - angleNext_pen;
+			error_theta := theta - u_cart;
 
 			// Integral with Anti-Windup
-			outputNextI_pen := outputNextI_pen + Ki_pen * T * errorNext_pen;
-			IF outputNextI_pen > 5.0 THEN outputNextI_pen := 5.0; ELSIF outputNextI_pen < -5.0 THEN outputNextI_pen := -5.0; END_IF
+			u_i_pen := u_i_pen + Ki_pen * Ts * error_theta;
+			IF u_i_pen > 5.0 THEN u_i_pen := 5.0; ELSIF u_i_pen < -5.0 THEN u_i_pen := -5.0; END_IF
 
 			// Filtered Derivative
-			outputNextD_pen := (Tf_pen / (Tf_pen + T)) * outputD_pen + (Kd_pen / (Tf_pen + T)) * (errorNext_pen - error_pen);
+			u_d_pen := (Tf / (Tf + Ts)) * u_d_old_pen + (Kd_pen / (Tf + Ts)) * (error_theta - error_theta_old);
 
-			outputNext_pen := Kp_pen * errorNext_pen + outputNextI_pen + outputNextD_pen;
-			
-			// Output = force
-			force := outputNext_pen;
+			u := Kp_pen * error_theta + u_i_pen + u_d_pen;
 
 			// Save state for next cycle
-			error_pen := errorNext_pen;
-			outputD_pen := outputNextD_pen;
-			
-			IF (I_pos_pendulum > 1550 AND I_pos_pendulum < 2550) THEN
-				Q_vel_cart := REAL_TO_INT(outputNext_pen * scale);
-			ELSE
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
-			IF (Q_vel_cart > 7500) THEN
-				Q_vel_cart := 7500;
-			ELSIF (Q_vel_cart < -7500) THEN
-				Q_vel_cart := -7500;
-			END_IF
-			IF NOT I_endstop_positive OR NOT I_endstop_negative THEN
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
-			
-			IF (I_pos_cart > 330000 OR I_pos_cart < 50000) THEN
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
-			
-//			IF Q_vel_cart < 0 THEN
-//				Q_vel_cart := Q_vel_cart - 1000;
-//			ELSIF Q_vel_cart > 0 THEN
-//				Q_vel_cart := Q_vel_cart + 1000;
-//			END_IF
+			error_theta_old := error_theta;
+			u_d_old_pen := u_d_pen;
 			
 		lqr:
 			
-			var0 := 2;
+			// LQR K Values
+			K1 := 28.1045;
+			K2 := 29.5079;
+			K3 := 72.0365;
+			K4 := 9.3493;
 			
-			K1 :=  -27.0;
-			K2 :=  -3.25;
-			K3 :=   126.2;
-			K4 :=   1.46;
+			opc_state := 20;
 			
-			positionNext_cart := (I_pos_cart - 191000) / 243500.0;
-			velocity_cart := (positionNext_cart - pos5) / 0.005;
+			u := - (( K1 * x ) + ( K2 * filt_x_dot ) + ( K3 * theta ) + ( K4 * filt_theta_dot ));
 			
-			angleNext_pen := (I_pos_pendulum - 2048) * ((2 * amPI) / 4096);
-			velocity_pen := (angleNext_pen - anglePos5) / 0.005;
+		lqi:
 			
-			filt_cart := (alpha * velocity_cart) + (( 1.0 - alpha) * filt_cart);
-			filt_pen := (alpha * velocity_pen) + ((1.0 - alpha) * filt_pen);
+			// LQI K Values
+			K1 :=  39.6;
+			K2 :=  32.6;
+			K3 :=  76.6;
+			K4 :=  9.9;
+			K5 := 14.0;
 			
-			force := - (( K1 * positionNext_cart ) + ( K2 * filt_cart ) + ( K3 * angleNext_pen ) + ( K4 * filt_pen ));
+			opc_state := 21;
 			
-			position_cart := positionNext_cart;
-			angle_pen := angleNext_pen;
+			error_x := error_x + (x * Ts);
+
+			IF error_x > 5 THEN
+				error_x := 5;
+			ELSIF error_x < -5 THEN
+				error_x := -5;
+			END_IF;
 			
-			pos5 := pos4;
-			pos4 := pos3;
-			pos3 := pos2;
-			pos2 := pos1;
-			pos1 := positionNext_cart;
-			
-			anglePos5 := anglePos4;
-			anglePos4 := anglePos3;
-			anglePos3 := anglePos2;
-			anglePos2 := anglePos1;
-			anglePos1 := angleNext_pen;
-			
-			
-			IF (I_pos_pendulum > 1550 AND I_pos_pendulum < 2550) THEN
-				Q_vel_cart := REAL_TO_INT(force * scale);
-			ELSE
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
-			IF (Q_vel_cart > 20000) THEN
-				Q_vel_cart := 20000;
-			ELSIF (Q_vel_cart < -20000) THEN
-				Q_vel_cart := -20000;
-			END_IF
-			IF NOT I_endstop_positive OR NOT I_endstop_negative THEN
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
-			
-			IF (I_pos_cart > 330000 OR I_pos_cart < 50000) THEN
-				Q_vel_cart := 0;
-				systemState := idle;
-			END_IF
+			u := - (( K1 * x ) + ( K2 * filt_x_dot ) + ( K3 * theta ) + ( K4 * filt_theta_dot ) + (K5 * error_x));
 		
 		center:
 			Q_vel_cart := -4000;
-			IF (I_pos_cart > 191000) THEN
-				systemState := idle;
+			IF (I_pos_cart > x_enc_middle) THEN
+				systemState := swingWait;
 			END_IF
+			
+			reset_pendulum_position := FALSE;
+			reset_cart_position := FALSE;
+			Q_drive_faultreset := NOT Q_drive_faultreset;
 		
 		pendulReset:
 			reset_pendulum_position := TRUE;
 			systemState := idle;
 						
 	END_CASE
+
+	IF (systemState = swing OR systemState = lqi OR systemState = lqr OR systemState = cascade) THEN
+		Q_vel_cart := REAL_TO_INT(u * u_scale);
+	END_IF
 	
-	var1 := var1 + 1;
-	var2 := I_pos_cart;
-	var3 := I_pos_pendulum;
-	var4 := force;
+	IF (ABS(theta) > 0.7 AND (systemState = lqi OR systemState = lqr OR systemState = cascade)) THEN
+		systemState := swingWait;
+	END_IF
+
+	IF (Q_vel_cart > max_torque) THEN
+		Q_vel_cart := max_torque;
+	ELSIF (Q_vel_cart < -max_torque) THEN
+		Q_vel_cart := -max_torque;
+	END_IF
+	
+	IF ((NOT I_endstop_positive OR NOT I_endstop_negative) AND (systemState = swing OR systemState = lqi OR systemState = lqr OR systemState = cascade)) THEN
+		Q_vel_cart := 0;
+		systemState := idle;
+	END_IF
+	
+	IF ((I_pos_cart > 360000 OR I_pos_cart < 20000) AND (systemState = swing OR systemState = lqi OR systemState = lqr OR systemState = cascade)) THEN
+		Q_vel_cart := 0;
+		systemState := idle;
+	END_IF
+	
+	x_old := x;
+	theta_old := theta;	
+	
+	opc_step := opc_step + 1;
+	opc_x := I_pos_cart;
+	opc_theta := I_pos_pendulum;
+	opc_u := u;
 	
 	 
 END_PROGRAM

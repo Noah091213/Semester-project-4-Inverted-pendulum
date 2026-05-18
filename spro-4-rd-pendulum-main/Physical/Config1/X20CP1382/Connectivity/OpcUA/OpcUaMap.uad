@@ -10,11 +10,11 @@
   <DefaultView>
     <Module Name="&lt;Default&gt;">
       <Task Name="Program">
-        <Variable Name="var0" />
-        <Variable Name="var1" />
-        <Variable Name="var2" />
-        <Variable Name="var3" />
-        <Variable Name="var4" />
+        <Variable Name="opc_state" />
+        <Variable Name="opc_step" />
+        <Variable Name="opc_theta" />
+        <Variable Name="opc_u" />
+        <Variable Name="opc_x" />
       </Task>
     </Module>
   </DefaultView>

@@ -1,0 +1,27 @@
+VAR
+	alpha : REAL := 0.01;
+	K1 : REAL;
+	K2 : REAL;
+	K3 : REAL;
+	K4 : REAL;
+	K5 : REAL;
+	filt_x_dot : REAL;
+	filt_theta_dot : REAL;
+	Kd_pen : REAL;
+	Ki_pen : REAL;
+	Kp_pen : REAL;
+	Ki_cart : REAL;
+	Kd_cart : REAL;
+	Kp_cart : REAL;
+	error_x : REAL;
+	error_theta : REAL;
+	error_x_old : REAL;
+	error_theta_old : REAL;
+	u_cart : REAL;
+	u_i_cart : REAL;
+	u_d_cart : REAL;
+	u_d_old_cart : REAL;
+	u_i_pen : REAL;
+	u_d_pen : REAL;
+	u_d_old_pen : REAL;
+END_VAR
