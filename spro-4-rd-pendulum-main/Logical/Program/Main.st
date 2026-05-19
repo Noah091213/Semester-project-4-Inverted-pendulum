@@ -8,9 +8,9 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_cart := -0.117;
+	Kp_cart := -0.0491;
 	Ki_cart := 0.0;
-	Kd_cart := -0.234;
+	Kd_cart := -0.0982;
 
 	Kp_pen := 14.23031;
 	Ki_pen := 63.24582;
@@ -24,18 +24,17 @@ PROGRAM _CYCLIC
 	x := (I_pos_cart - x_enc_middle) / x_enc_scale;
 	x_dot := (x - x_old) / Ts;
 			
-	theta := ((I_pos_pendulum) - theta_enc_middle) * theta_enc_scale;
-	IF theta > 3.14159274 THEN
-		theta := theta - 6.28318;
-	ELSIF theta < -3.14159274 THEN
-		theta := theta + 6.28318;
-	END_IF
+	theta := (((I_pos_pendulum + pendulum_offset)  MOD 4096) - theta_enc_middle) * theta_enc_scale;
 	theta_dot := (theta - theta_old) / Ts;
 			
 	filt_x_dot := (alpha * x_dot) + (( 1.0 - alpha) * filt_x_dot);
 	filt_theta_dot := (alpha * theta_dot) + ((1.0 - alpha) * filt_theta_dot);
 	
-	theta_cos := COS(theta);
+	// Swing calculations
+
+	theta_offset := ((I_pos_pendulum + pendulum_offset - theta_enc_middle) MOD 4096) * theta_enc_scale;
+
+	theta_cos := COS(theta_offset);
 
 	// Handle EStop
 	IF(SI_estop_A AND SI_estop_B) THEN
@@ -124,7 +123,7 @@ PROGRAM _CYCLIC
 		swingWait:
 			Q_vel_cart := 0;
 			
-			resetTimer.IN := (theta < -1.6 AND theta > -4.7); // Timer counts as long as vel is 0
+			resetTimer.IN := (ABS(theta) > (amPI / 3)); // Timer counts as long as vel is 0
 			resetTimer.PT := T#1s; // Timer set to 1 second
 			resetTimer();
 			
@@ -135,27 +134,32 @@ PROGRAM _CYCLIC
 			END_IF
 			
 		swing:
+
+			theta_dot := (theta_offset - theta_offset_old) / Ts;
+			
+			filt_theta_offset_dot := (alpha * theta_dot) + ((1.0 - alpha) * filt_theta_offset_dot);
+
 			// 1. Calculate Total Energy (Kinetic + Potential)
-			energy := (0.5 * I_p * filt_theta_dot * filt_theta_dot) + (m_p * g * l * (theta_cos - 1.0));
+			energy := (0.5 * I_p * filt_theta_offset_dot * filt_theta_offset_dot) + (m_p * g * l * (theta_cos - 1.0));
 
 			// 2. Compute Energy Error (Target is 0.0 energy at the top)
 			error_energy := 0.0 - energy;
 
 			// 3. Determine push direction based on movement phase
-			IF (filt_theta_dot * theta_cos) > 0.0 THEN
+			IF (filt_theta_offset_dot * theta_cos) > 0.0 THEN
 				direction := 1.0;
-			ELSIF (filt_theta_dot * theta_cos) < 0.0 THEN
+			ELSIF (filt_theta_offset_dot * theta_cos) < 0.0 THEN
 				direction := -1.0;
 			ELSE
 				direction := 0.0;
 			END_IF
 			
-			// 4. Calculate Control Effort
-			u := energy_gain * error_energy * direction;
+			// 4. Calculate Control Effort (2 * x is -kx)
+			u := energy_gain * error_energy * direction + 1.5 * x;
 			
-			// --- CATCH CONDITION ---
-			// If angle is within ~35 degrees (0.61 rad) and velocity is low enough
-			IF (ABS(theta) < 0.45) AND (ABS(theta_dot) < 3.5) THEN
+			// --- CATCH CONDITION --
+			// If angle is within ~30 degrees and velocity is low
+			IF (ABS(theta) < (amPI / 6)) AND (ABS(theta_dot) < 3.5) THEN
 				systemState := controller;
 			END_IF
 			
@@ -163,8 +167,7 @@ PROGRAM _CYCLIC
 			opc_state := 10;
 
 			// --- CART (Outer Loop) ---
-			x := I_pos_cart / x_enc_scale;
-			error_x := (x_enc_middle / x_enc_scale) - x;
+			error_x := -x;
 
 			// Integral with Ts
 			u_i_cart := u_i_cart + Ki_cart * Ts * error_x;
@@ -180,10 +183,9 @@ PROGRAM _CYCLIC
 
 
 			// --- PENDULUM (Inner Loop) ---
-			theta := (I_pos_pendulum - theta_enc_middle) * theta_enc_scale;
 
 			// The Cart output defines the required tilt angle
-			error_theta := theta - u_cart;
+			error_theta := - u_cart - theta;
 
 			// Integral with Anti-Windup
 			u_i_pen := u_i_pen + Ki_pen * Ts * error_theta;
@@ -251,7 +253,7 @@ PROGRAM _CYCLIC
 		Q_vel_cart := REAL_TO_INT(u * u_scale);
 	END_IF
 	
-	IF (ABS(theta) > 0.7 AND (systemState = lqi OR systemState = lqr OR systemState = cascade)) THEN
+	IF (ABS(theta) > (amPI / 4) AND (systemState = lqi OR systemState = lqr OR systemState = cascade)) THEN
 		systemState := swingWait;
 	END_IF
 
@@ -273,6 +275,7 @@ PROGRAM _CYCLIC
 	
 	x_old := x;
 	theta_old := theta;	
+	theta_offset_old := theta_offset;
 	
 	opc_step := opc_step + 1;
 	opc_x := I_pos_cart;

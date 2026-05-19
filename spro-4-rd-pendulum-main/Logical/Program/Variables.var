@@ -1,6 +1,10 @@
 VAR
+	pendulum_offset : DINT := 4096000;
 	x : REAL;
 	theta : REAL;
+	theta_offset : REAL;
+	theta_offset_old : REAL;
+	filt_theta_offset_dot : REAL;
 	x_old : REAL;
 	theta_old : REAL;
 	x_dot : REAL;
@@ -9,12 +13,12 @@ VAR
 	u : REAL;
 	u_scale : INT := 2275;
 	systemState : system_State := pendulReset;
-	Tf : REAL := 0.01;
+	Tf : REAL := 0.005;
 	Ts : REAL := 0.001;
 	x_enc_scale : REAL := 243500.0;
 	theta_enc_scale : REAL := 0.001533980788;
 	x_enc_middle : REAL := 191000.0;
-	theta_enc_middle : REAL := 2048.0;
+	theta_enc_middle : INT := 2048;
 	count : USINT := 0;
 	led_ton : TON;
 	resetTimer : TON;
