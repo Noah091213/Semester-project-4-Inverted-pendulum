@@ -5,7 +5,7 @@ from asyncua import Client, ua
 
 url = "opc.tcp://192.168.8.101:4841"
 namespace = "urn:B&R/pv/"
-DURATION = 20  # Total recording time
+DURATION = 30  # Total recording time
 SAMPLE_RATE = 0.001  # 5ms loop timer
 
 async def main():

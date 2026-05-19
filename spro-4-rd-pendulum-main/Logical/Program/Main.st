@@ -8,13 +8,13 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_cart := -0.0491;
-	Ki_cart := 0.0;
-	Kd_cart := -0.0982;
+	Kp_cart := -0.51;
+	Ki_cart := -0.18;
+	Kd_cart := -0.42;
 
-	Kp_pen := 14.23031;
-	Ki_pen := 63.24582;
-	Kd_pen := 0.79057;
+	Kp_pen := 76.6;
+	Ki_pen := 0.0;
+	Kd_pen := 9.9;
 	
 END_PROGRAM
 
@@ -75,7 +75,6 @@ PROGRAM _CYCLIC
 			opc_step := 0;
 			
 			// Cascade reset
-			x := 0;
 			error_x_old := 0;
 			error_x := 0;
 			u_i_cart := 0;
@@ -88,10 +87,8 @@ PROGRAM _CYCLIC
 			u_i_pen := 0;
 			u_d_pen := 0;
 			u_d_old_pen := 0;
-			u := 0;
 			
 			// LQR reset
-			x := 0;
 			theta_old := 0;
 			x_old := 0;
 			x_dot := 0;
@@ -123,8 +120,12 @@ PROGRAM _CYCLIC
 		swingWait:
 			Q_vel_cart := 0;
 			
+			IF (ABS(theta) < (amPI / 6)) AND (ABS(theta_dot) < 0.5) THEN
+				systemState := controller;
+			END_IF
+			
 			resetTimer.IN := (ABS(theta) > (amPI / 3)); // Timer counts as long as vel is 0
-			resetTimer.PT := T#1s; // Timer set to 1 second
+			resetTimer.PT := T#0.5s; // Timer set to 1 second
 			resetTimer();
 			
 			IF resetTimer.Q THEN
@@ -159,9 +160,23 @@ PROGRAM _CYCLIC
 			
 			// --- CATCH CONDITION --
 			// If angle is within ~30 degrees and velocity is low
-			IF (ABS(theta) < (amPI / 6)) AND (ABS(theta_dot) < 3.5) THEN
+			IF (ABS(theta) < (amPI / 6)) AND (ABS(theta_dot) < 1) THEN
 				systemState := controller;
 			END_IF
+			
+			// Cascade reset
+			error_x_old := 0;
+			error_x := 0;
+			u_i_cart := 0;
+			u_d_cart := 0;
+			u_d_old_cart := 0;
+			u_cart := 0;
+			
+			error_theta := 0;
+			error_theta_old := 0;
+			u_i_pen := 0;
+			u_d_pen := 0;
+			u_d_old_pen := 0;
 			
 		cascade:
 			opc_state := 10;
@@ -173,7 +188,7 @@ PROGRAM _CYCLIC
 			u_i_cart := u_i_cart + Ki_cart * Ts * error_x;
 
 			// Filtered Derivative
-			u_d_cart := (Tf / (Tf + Ts)) * u_d_old_cart + (Kd_cart / (Tf + Ts)) * (error_x - error_x_old);
+			u_d_cart := - (Kd_cart * filt_x_dot);
 
 			u_cart := Kp_cart * error_x + u_i_cart + u_d_cart;
 
@@ -192,13 +207,14 @@ PROGRAM _CYCLIC
 			IF u_i_pen > 5.0 THEN u_i_pen := 5.0; ELSIF u_i_pen < -5.0 THEN u_i_pen := -5.0; END_IF
 
 			// Filtered Derivative
-			u_d_pen := (Tf / (Tf + Ts)) * u_d_old_pen + (Kd_pen / (Tf + Ts)) * (error_theta - error_theta_old);
+			u_d_pen := - (Kd_pen * filt_theta_dot);
 
 			u := Kp_pen * error_theta + u_i_pen + u_d_pen;
 
 			// Save state for next cycle
 			error_theta_old := error_theta;
 			u_d_old_pen := u_d_pen;
+			
 			
 		lqr:
 			
