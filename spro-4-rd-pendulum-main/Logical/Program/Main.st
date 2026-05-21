@@ -8,13 +8,13 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_cart := -0.51;
-	Ki_cart := -0.18;
-	Kd_cart := -0.42;
+	Kp_pen := 101.85;
+	Ki_pen := 0.00;
+	Kd_pen := 14.28;
 
-	Kp_pen := 76.6;
-	Ki_pen := 0.0;
-	Kd_pen := 9.9;
+	Kp_cart := -0.0592;
+	Ki_cart := -0.0056;
+	Kd_cart := -0.1000;
 	
 END_PROGRAM
 
@@ -47,6 +47,7 @@ PROGRAM _CYCLIC
 	
 	// Handle Reset Btn
 	IF(SI_reset_btn) THEN
+		opc_step := 0;
 		count := count + 1;
 		IF (count = 10) THEN
 			Q_drive_faultreset := NOT Q_drive_faultreset;
@@ -97,6 +98,9 @@ PROGRAM _CYCLIC
 			filt_theta_dot := 0;
 			
 		reset: // Position reset
+			
+			opc_state := 1;
+			
 			IF NOT I_endstop_positive THEN
 				Q_vel_cart := 0;
 			ELSE
@@ -118,6 +122,9 @@ PROGRAM _CYCLIC
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 			
 		swingWait:
+			
+			opc_state := 5;
+			
 			Q_vel_cart := 0;
 			
 			IF (ABS(theta) < (amPI / 6)) AND (ABS(theta_dot) < 0.5) THEN
@@ -135,6 +142,8 @@ PROGRAM _CYCLIC
 			END_IF
 			
 		swing:
+			
+			opc_state := 6;
 
 			theta_dot := (theta_offset - theta_offset_old) / Ts;
 			
@@ -237,7 +246,7 @@ PROGRAM _CYCLIC
 			K4 :=  9.9;
 			K5 := 14.0;
 			
-			opc_state := 21;
+			opc_state := 30;
 			
 			error_x := error_x + (x * Ts);
 
@@ -250,6 +259,9 @@ PROGRAM _CYCLIC
 			u := - (( K1 * x ) + ( K2 * filt_x_dot ) + ( K3 * theta ) + ( K4 * filt_theta_dot ) + (K5 * error_x));
 		
 		center:
+			
+			opc_state := 2;
+			
 			Q_vel_cart := -4000;
 			IF (I_pos_cart > x_enc_middle) THEN
 				systemState := swingWait;
@@ -260,10 +272,38 @@ PROGRAM _CYCLIC
 			Q_drive_faultreset := NOT Q_drive_faultreset;
 		
 		pendulReset:
+			
+			opc_state := -1;
+			
 			reset_pendulum_position := TRUE;
 			systemState := idle;
 						
 	END_CASE
+	
+	IF push THEN
+		u := u + 10;
+		count := count + 1;
+		opc_state := opc_state + 1;
+		
+		IF count = 100 THEN
+			opc_state := opc_state - 1;
+			push := FALSE;
+			count := 0;
+		END_IF
+		
+	END_IF
+	
+	IF step THEN
+		u := u + 8;
+		count := count + 1;
+		opc_state := opc_state + 2;
+		
+		IF count = 5000 THEN
+			step := FALSE;
+			count := 0;
+		END_IF
+		
+	END_IF 
 
 	IF (systemState = swing OR systemState = lqi OR systemState = lqr OR systemState = cascade) THEN
 		Q_vel_cart := REAL_TO_INT(u * u_scale);
@@ -288,6 +328,8 @@ PROGRAM _CYCLIC
 		Q_vel_cart := 0;
 		systemState := idle;
 	END_IF
+	
+	
 	
 	x_old := x;
 	theta_old := theta;	

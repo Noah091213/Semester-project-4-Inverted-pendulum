@@ -2,6 +2,8 @@ import asyncio
 import csv
 import time
 from asyncua import Client, ua
+from datetime import datetime
+import os
 
 url = "opc.tcp://192.168.8.101:4841"
 namespace = "urn:B&R/pv/"

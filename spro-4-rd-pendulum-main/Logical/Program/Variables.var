@@ -3,6 +3,8 @@ VAR
 	x : REAL;
 	theta : REAL;
 	theta_offset : REAL;
+	step : BOOL;
+	push : BOOL;
 	theta_offset_old : REAL;
 	filt_theta_offset_dot : REAL;
 	x_old : REAL;
@@ -19,7 +21,7 @@ VAR
 	theta_enc_scale : REAL := 0.001533980788;
 	x_enc_middle : REAL := 191000.0;
 	theta_enc_middle : INT := 2048;
-	count : USINT := 0;
+	count : DINT := 0;
 	led_ton : TON;
 	resetTimer : TON;
 	max_torque : INT := 15000;
