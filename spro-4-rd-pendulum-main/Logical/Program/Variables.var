@@ -24,10 +24,11 @@ VAR
 	count : DINT := 0;
 	led_ton : TON;
 	resetTimer : TON;
-	max_torque : INT := 15000;
+	max_torque : INT := 20000;
 	opc_state : REAL;
 	opc_step : REAL;
 	opc_x : REAL;
 	opc_theta : REAL;
 	opc_u : REAL;
+	theta_desturb : BOOL;
 END_VAR

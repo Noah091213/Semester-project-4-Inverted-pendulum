@@ -8,13 +8,13 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_pen := 101.85;
-	Ki_pen := 0.00;
-	Kd_pen := 14.28;
+	Kp_cart := -0.6000;
+	Ki_cart := -0.2000;
+	Kd_cart := -0.2000;
 
-	Kp_cart := -0.0592;
-	Ki_cart := -0.0056;
-	Kd_cart := -0.1000;
+	Kp_pen := 76.63;
+	Ki_pen := 0.00;
+	Kd_pen := 11.59;
 	
 END_PROGRAM
 
@@ -35,6 +35,12 @@ PROGRAM _CYCLIC
 	theta_offset := ((I_pos_pendulum + pendulum_offset - theta_enc_middle) MOD 4096) * theta_enc_scale;
 
 	theta_cos := COS(theta_offset);
+	
+	
+	IF theta_desturb THEN
+		theta := theta + amPI/24;
+	END_IF
+	
 
 	// Handle EStop
 	IF(SI_estop_A AND SI_estop_B) THEN
@@ -194,10 +200,10 @@ PROGRAM _CYCLIC
 			error_x := -x;
 
 			// Integral with Ts
-			u_i_cart := u_i_cart + Ki_cart * Ts * error_x;
+			u_i_cart := u_i_cart + Ki_cart * Ts * ((error_x + error_x_old) / 2);
 
-			// Filtered Derivative
-			u_d_cart := - (Kd_cart * filt_x_dot);
+			// Derivative
+			u_d_cart := (Kd_cart * (error_x - error_x_old)) / Ts;
 
 			u_cart := Kp_cart * error_x + u_i_cart + u_d_cart;
 
@@ -211,14 +217,10 @@ PROGRAM _CYCLIC
 			// The Cart output defines the required tilt angle
 			error_theta := - u_cart - theta;
 
-			// Integral with Anti-Windup
-			u_i_pen := u_i_pen + Ki_pen * Ts * error_theta;
-			IF u_i_pen > 5.0 THEN u_i_pen := 5.0; ELSIF u_i_pen < -5.0 THEN u_i_pen := -5.0; END_IF
+			// Derivative
+			u_d_pen := (Kd_pen * (error_theta - error_theta_old)) / Ts;
 
-			// Filtered Derivative
-			u_d_pen := - (Kd_pen * filt_theta_dot);
-
-			u := Kp_pen * error_theta + u_i_pen + u_d_pen;
+			u := Kp_pen * error_theta + u_d_pen;
 
 			// Save state for next cycle
 			error_theta_old := error_theta;
@@ -280,12 +282,24 @@ PROGRAM _CYCLIC
 						
 	END_CASE
 	
+	IF theta_desturb THEN
+		opc_state := opc_state + 4;
+		theta := theta - amPI/24;
+		count := count + 1;
+		
+		IF count = 50 THEN
+			theta_desturb := FALSE;
+			count := 0;
+		END_IF
+		
+	END_IF
+	
 	IF push THEN
-		u := u + 10;
+		u := u + 6;
 		count := count + 1;
 		opc_state := opc_state + 1;
 		
-		IF count = 100 THEN
+		IF count = 50 THEN
 			opc_state := opc_state - 1;
 			push := FALSE;
 			count := 0;
@@ -298,7 +312,7 @@ PROGRAM _CYCLIC
 		count := count + 1;
 		opc_state := opc_state + 2;
 		
-		IF count = 5000 THEN
+		IF count = 10000 THEN
 			step := FALSE;
 			count := 0;
 		END_IF
@@ -336,8 +350,8 @@ PROGRAM _CYCLIC
 	theta_offset_old := theta_offset;
 	
 	opc_step := opc_step + 1;
-	opc_x := I_pos_cart;
-	opc_theta := I_pos_pendulum;
+	opc_x := x;
+	opc_theta := theta;
 	opc_u := u;
 	
 	 
