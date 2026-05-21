@@ -7,6 +7,10 @@ url = "opc.tcp://192.168.8.101:4841"
 namespace = "urn:B&R/pv/"
 DURATION = 30  # Total recording time
 SAMPLE_RATE = 0.001  # 5ms loop timer
+timestamp_suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
+base_dir = r"G:\My Drive\Uddannelse\SDU\Semester-project-4-Inverted-pendulum"
+filename = f"pendulum_data_{timestamp_suffix}.csv"
+final_filepath = os.path.join(base_dir, filename)
 
 async def main():
     print(f"Connecting to {url} ...")
@@ -32,7 +36,7 @@ async def main():
             loop_start = time.time()
             
             # Read values directly from the PLC
-            row = {"Timestamp": time.strftime("%H:%M:%S") + f".{int((time.time()%1)*1000):03d}"}
+            row = {}
             
             # Perform the reads
             # Note: client.read_values(list_of_nodes) is faster than individual calls
@@ -49,9 +53,9 @@ async def main():
             await asyncio.sleep(sleep_time)
 
         # Save to CSV
-        print(f"Saving {len(data_rows)} rows to pendulum_data.csv...")
-        with open(r"G:\My Drive\Uddannelse\SDU\Semester-project-4-Inverted-pendulum\pendulum_data.csv", "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=["Timestamp"] + list(nodes.keys()))
+        print(f"Saving {len(data_rows)} rows to {filename}...")
+        with open(final_filepath, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=list(nodes.keys()))
             writer.writeheader()
             writer.writerows(data_rows)
 
