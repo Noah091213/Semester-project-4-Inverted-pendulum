@@ -8,13 +8,13 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_cart := -0.6000;
-	Ki_cart := -0.2000;
-	Kd_cart := -0.2000;
+	Kp_cart := -0.2420;
+	Ki_cart := -0.1460;
+	Kd_cart := -0.1000;
 
-	Kp_pen := 76.63;
+	Kp_pen := 116.02;
 	Ki_pen := 0.00;
-	Kd_pen := 11.59;
+	Kd_pen := 16.26;
 	
 END_PROGRAM
 
@@ -38,7 +38,7 @@ PROGRAM _CYCLIC
 	
 	
 	IF theta_desturb THEN
-		theta := theta + amPI/24;
+		theta := theta + amPI/12;
 	END_IF
 	
 
@@ -203,7 +203,7 @@ PROGRAM _CYCLIC
 			u_i_cart := u_i_cart + Ki_cart * Ts * ((error_x + error_x_old) / 2);
 
 			// Derivative
-			u_d_cart := (Kd_cart * (error_x - error_x_old)) / Ts;
+			u_d_cart := u_d_cart * (1.0 - alpha) + alpha * (Kd_cart * (error_x - error_x_old)) / Ts;
 
 			u_cart := Kp_cart * error_x + u_i_cart + u_d_cart;
 
@@ -218,7 +218,7 @@ PROGRAM _CYCLIC
 			error_theta := - u_cart - theta;
 
 			// Derivative
-			u_d_pen := (Kd_pen * (error_theta - error_theta_old)) / Ts;
+			u_d_pen := u_d_cart * (1.0 - alpha) + alpha * (Kd_pen * (error_theta - error_theta_old)) / Ts;
 
 			u := Kp_pen * error_theta + u_d_pen;
 
@@ -283,11 +283,11 @@ PROGRAM _CYCLIC
 	END_CASE
 	
 	IF theta_desturb THEN
-		opc_state := opc_state + 4;
-		theta := theta - amPI/24;
+		opc_state := opc_state + 3;
+		theta := theta - amPI/12;
 		count := count + 1;
 		
-		IF count = 50 THEN
+		IF count = 10000 THEN
 			theta_desturb := FALSE;
 			count := 0;
 		END_IF

@@ -7,7 +7,7 @@ import os
 
 url = "opc.tcp://192.168.8.101:4841"
 namespace = "urn:B&R/pv/"
-DURATION = 30  # Total recording time
+DURATION = 10  # Total recording time
 SAMPLE_RATE = 0.001  # 5ms loop timer
 timestamp_suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
 base_dir = r"G:\My Drive\Uddannelse\SDU\Semester-project-4-Inverted-pendulum"
