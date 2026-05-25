@@ -1,2 +1,33 @@
-\chapter{PLC implemetation}
-\label{chap:plc implemetation}
+\chapter{PLC Implementation}
+\label{chap:plc implementation}
+
+Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a motor controller which in turn is connected to the PLC via an analog signal. The motor controller can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. The scaling factor is found as follows based on the resolution of the analog signal (16 bit integer), belt's roller diameter [meter] and motor's max torque [newton meter]:
+
+\begin{align}
+	scalingFactor = \left\lfloor \frac{analogResolution \cdot rollerDiameter}{maxTorque} \right\rfloor 
+	= \left\lfloor\frac{32,768 \cdot 0.05}{0.72}\right\rfloor = 2,275
+\end{align}
+
+This also allows for the calculation of the maximum possible force that can be applied to the cart:
+
+\begin{align}
+	maxForce = \frac{maxTorque}{rollerDiameter} = \frac{0.72}{0.05} = 14.4 [N]
+\end{align}
+
+In order to interact with the controllers, the inputs from the encoders must be converted. The encoder for the pendulum has a resolution of 4096 units per full cycle and is reset such that the encoder shows 0 when the pendulum is hanging straight down. The controller expects the input to be in radians with 0 pointing straight up. Thus the conversion can be done as follows:
+
+\begin{align}
+	theta [rad] = ((encoder_{pendulum} \bmod{4096}) - 2048) \cdot \left(\frac{\pi \cdot 2}{4096}\right)
+\end{align}
+
+The conversion for the cart position was found using a measured distance. Moving the cart from one end of the track to the other resulted in the encoder showing 381,709 units while the cart moved 156.7 centimeters. Thus the amount of units per meter can be found as:
+
+\begin{align}
+	unitsPerMeter = \frac{381,709}{1.567} = 243,592
+\end{align}
+
+The controllers expect the input to be in meters, with 0 at the center of the track, which is set to 191,000 units, roughly half of the full length. The conversion looks as follows:
+
+\begin{align}
+	x [m] = \frac{encoder_{cart} - 191,000}{243,592}
+\end{align}
