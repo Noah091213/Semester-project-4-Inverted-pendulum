@@ -8,13 +8,13 @@ PROGRAM _INIT
 	reset_cart_position;
 
 	// PID K Values
-	Kp_cart := -0.2420;
-	Ki_cart := -0.1460;
-	Kd_cart := -0.1000;
+	Kp_cart := -0.4;
+	Ki_cart := -0.1;
+	Kd_cart := -0.4;
 
-	Kp_pen := 116.02;
+	Kp_pen := 75.0;
 	Ki_pen := 0.00;
-	Kd_pen := 16.26;
+	Kd_pen := 10.0;
 	
 END_PROGRAM
 
@@ -138,13 +138,14 @@ PROGRAM _CYCLIC
 			END_IF
 			
 			resetTimer.IN := (ABS(theta) > (amPI / 3)); // Timer counts as long as vel is 0
-			resetTimer.PT := T#0.5s; // Timer set to 1 second
+			resetTimer.PT := T#1s; // Timer set to 1 second
 			resetTimer();
 			
 			IF resetTimer.Q THEN
 				systemState := swing;
 				
 				resetTimer.IN := FALSE;
+				resetTimer();
 			END_IF
 			
 		swing:
@@ -218,7 +219,7 @@ PROGRAM _CYCLIC
 			error_theta := - u_cart - theta;
 
 			// Derivative
-			u_d_pen := u_d_cart * (1.0 - alpha) + alpha * (Kd_pen * (error_theta - error_theta_old)) / Ts;
+			u_d_pen := Kd_pen * -filt_theta_dot;
 
 			u := Kp_pen * error_theta + u_d_pen;
 
@@ -343,6 +344,22 @@ PROGRAM _CYCLIC
 		systemState := idle;
 	END_IF
 	
+	IF NOT (systemState = cascade) THEN
+		// Cascade reset
+		error_x_old := 0;
+		error_x := 0;
+		u_i_cart := 0;
+		u_d_cart := 0;
+		u_d_old_cart := 0;
+		u_cart := 0;
+			
+		error_theta := 0;
+		error_theta_old := 0;
+		u_i_pen := 0;
+		u_d_pen := 0;
+		u_d_old_pen := 0;
+			
+	END_IF
 	
 	
 	x_old := x;

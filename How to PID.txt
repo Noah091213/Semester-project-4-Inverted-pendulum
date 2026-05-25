@@ -8,11 +8,11 @@ step 3: ???
 
 step 4: profit
 pendulum:
-kp 90
+kp 75
 ki 0
-kd 15
+kd 10
 
 cart:
-kp -0.3
-ki -0.1
-kd -0.17
+kp -0.4
+ki -0.4
+kd -0.1
