@@ -33,13 +33,13 @@ The maximum limits defined for this system are:
 	\item \textbf{Cart Velocity ($\dot{x}$):} $1.0$ m/s
 	\item \textbf{Pendulum Angle ($\theta$):} $\frac{\pi}{4}$ rad
 	\item \textbf{Pendulum Velocity ($\dot{\theta}$):} $5.0$ rad/s
-	\item \textbf{Actuator Force ($F$):} $14.4$ N
+	\item \textbf{Output Force ($u$):} $14.4$ N
 \end{itemize}
 
 Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with these $\textbf{Q}$ and $\textbf{R}$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain matrix $\textbf{K}$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
+Solving the algebraic Riccati equation with these $\textbf{Q}$ and $\textbf{R}$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain vector $\textbf{K}$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
 
 \begin{equation}
 	\label{LQR control law}
@@ -67,13 +67,13 @@ The standard state vector is then augmented from four variables to five:
 \subsection{The Augmented Control Law}
 To implement LQI, the discrete system matrices ($A$ and $B$) and the penalty matrices ($Q$ and $R$) are expanded to fit this fifth state. The augmented $Q$ matrix receives a new diagonal value specifically to penalize the integral error.\newline
 
-Solving the algebraic Riccati equation again for this augmented system gives the new gain matrix, and the resulting control law becomes:
+Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
-	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta}) - K_5 x_i
+	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
 \end{equation}
 
-Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will settle on its target position, regardless of small physical imperfections or friction.
+Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
 
 \subsection{Poles \& Performance For LQI}
 
@@ -151,7 +151,7 @@ The total mechanical energy ($E$) of the pendulum is calculated as the sum of it
 	\label{System energy}
 	E = \frac{1}{2} I_p \dot{\theta}^2 + m_p g l (\cos\theta - 1)
 \end{equation}
-The system defines the upward position as having an energy state of exactly 0.0.
+The system defines the upward position as having an energy state of 0.0.
 
 By subtracting $1.0$ from the cosine of theta, the potential energy is offset so that it peaks at zero when the pendulum is in the upward position. The controller then calculates the energy error ($e_E$) as the difference between this target state (0.0) and the pendulum's current mechanical energy:
 \begin{equation}
