@@ -105,8 +105,6 @@ Once the inner loop is closed and verified to meet the goals, the outer loop is 
 \end{equation}
 The PID controller introduces one pole at the origin (from the integrator) and two zeros. Using Root Locus on the new combined system, these zeros are placed to change the trajectory of the cart's poles. The goal here is to target ensure the cart moves slowly so that the pendulum is not destabilzed by aggressive changes to the pendulum angle ($\theta_{ref}$).
 
-\subsection{Poles \& Performance For Cascade}
-
 \subsection{Alternative Tuning Methods}
 While Root Locus provides an intuitive, graphical understanding of system stability, several other tuning methodologies exist to refine the initial gains:
 
@@ -114,6 +112,33 @@ While Root Locus provides an intuitive, graphical understanding of system stabil
 	\item \textbf{Frequency Response (Bode/Nyquist Plots):} This method shapes the open loop frequency response to achieve specific gain and phase margins. It is particularly useful for ensuring the system remains stable despite unmodeled high frequency dynamics (like sensor noise or actuator lag) and for precisely decoupling the bandwidths of the inner and outer loops.
 	\item \textbf{Computational Optimization:} Software tools (such as MATLAB's \texttt{pidtune}) can algorithmically calculate gains by minimizing a specified cost function, such as the Integral Time Absolute Error (ITAE). This approach systematically balances rise time, settling time, and overshoot against a mathematically defined performance metric.
 \end{itemize}
+
+\subsection{Cascade Control Law}
+First, the cart's position error ($e_x$) is calculated by subtracting its current measured position from the target position:
+\begin{equation}
+	\label{Cart position error}
+	e_x = x_{ref} - x_c
+\end{equation}
+
+It is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
+\begin{equation}
+	\label{Cart PID}
+	\theta_{ref} = K_{p,x} e_x + K_{i,x} \int e_x dt + K_{d,x} \frac{d e_x}{dt}
+\end{equation}
+
+Once the reference angle ($\theta_{ref}$) is calculated by the outer loop, the inner loop calculates the pendulum's current angular error ($e_\theta$):
+\begin{equation}
+	\label{Pendulum angle error}
+	e_\theta = \theta_{ref} - \theta
+\end{equation}
+
+The angular error is then multiplied by the proportional gain ($K_{p,\theta}$), and its rate of change is multiplied by the derivative gain ($K_{d,\theta}$). Adding these two terms gives the final control law, which outputs the force ($u$):
+\begin{equation}
+	\label{Pendulum PD}
+	u = K_{p,\theta} e_\theta + K_{d,\theta} \frac{d e_\theta}{dt}
+\end{equation}
+
+\subsection{Poles \& Performance For Cascade}
 
 \section{Swing up}
 Something that is not nescessary for balancing the pendulum itself is swing up, instead the purpose of this is to get the pendulum from hanging downward to within a specific range of the upward position where a controller can catch it. This makes the testing process of the different controllers much easier and the overall implementation and use of the system simpler.
