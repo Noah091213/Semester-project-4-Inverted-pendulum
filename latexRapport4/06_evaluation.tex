@@ -3,15 +3,15 @@
 
 \subsection{Preface}
 
-To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to get a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in REF[] but graphs of the representative data can be seen here. \\
+To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to get a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in REF[] but graphs of the representative data can be seen here. 
 
-For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. Because 0 is in the center of the track, the graphs will always be centered around that, as all units are in the treated units and not in raw encoder units. The pendulum angle shows what the angle of the entire pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the carts center. The motor force test is readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in REF[]. 
+For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. \replace{Because 0 is in the center of the track, the graphs will always be centered around that, as all units are in the treated units and not in raw encoder units.}{For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track.} The pendulum angle shows what the angle of the entire pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the carts center. The motor force test is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in REF[]. 
 
-All the tests are colour-coded, and the simulation tests from SIMULINK are the same colour as the physical test, but a dotted.
+All tests are colour-coded, and the simulation tests from SIMULINK are the same colour as the physical test, but a dotted.
 
 \subsection{Impulse test}
 
-The impulse test was done by applying a single impulse of 6 newtons, for 50 milliseconds, to the output of the controller. This means that at an output of 1 newton, would mean that the cart would be affected by 6 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
+The impulse test was done by applying a single \comment{impulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, \remove{would mean that} the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
 
 \begin{figure}[H]
     \centering
@@ -20,7 +20,7 @@ The impulse test was done by applying a single impulse of 6 newtons, for 50 mill
 	\label{fig:impulse_cart_pos}   
 \end{figure}
 
-The impulse acts differntly for all 3 controllers specificly because of the starting condition of when the impulse happens. As the graph shows, all 3 controllers are at a different point in either steady or swinging one or the other way. Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
+The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. \comment{As the graph shows, all 3 controllers are at a different point in either steady or swinging one or the other way.}{hvaba} Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
 
 \begin{figure}[H]
     \centering
