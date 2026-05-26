@@ -41,11 +41,12 @@ Using these limits, the diagonal values of the $Q$ and $R$ matrices are calculat
 Solving the algebraic Riccati equation with these $Q$ and $R$ weights yields the optimal feedback gain matrix $K$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
 
 \begin{equation}
+	\label{LQR control law}
 	u = -K x = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta})
 \end{equation}
 
 \section{LQI controller}
-While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodeled dynamics or constant disturbances in the system, such as friction in the belt which the cart sits on or other forces affecting the cart or pendulum.
+While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodeled dynamics or constant disturbances in the system, such as friction in the belt which the cart sits on, inclinations in the setup or other forces affecting the cart or pendulum.
 
 \subsection{Augmenting the State Vector}
 To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the "I" term in a PID controller.\newline
@@ -65,6 +66,7 @@ To implement LQI, the discrete system matrices ($A$ and $B$) and the penalty mat
 
 Solving the algebraic Riccati equation again for this augmented system gives the new gain matrix, and the resulting control law becomes:
 \begin{equation}
+	\label{LQI control law}
 	u = -K_{aug} x_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta}) - K_i x_i
 \end{equation}
 
@@ -86,12 +88,14 @@ The primary method used for tuning these controllers is the Root Locus technique
 
 The transfer function for the inner PD controller is:
 \begin{equation}
+	\label{PD controller}
 	C_{PD}(s) = K_{p,\theta} + K_{d,\theta} s
 \end{equation}
 This structure adds a single zero to the open loop system. The inner loop is tuned first by strategically placing this zero on the s-plane to "pull" the unstable open loop poles of the pendulum into the stable left-half plane (LHP), ensuring the system meets the performance requirements (write more on requirements here and on LQR!).\newline
 
 Once the inner loop is closed and verified to meet the goals, the outer loop is tuned. The transfer function for the outer PID controller is:
 \begin{equation}
+	\label{PID controller}
 	C_{PID}(s) = K_{p,x} + \frac{K_{i,x}}{s} + K_{d,x} s = \frac{K_{d,x} s^2 + K_{p,x} s + K_{i,x}}{s}
 \end{equation}
 The PID controller introduces one pole at the origin (from the integrator) and two zeros. Using Root Locus on the new combined system, these zeros are placed to change the trajectory of the cart's poles. The goal here is to target ensure the cart moves slowly so that the pendulum is not destabilzed by aggressive changes to the pendulum angle ($\theta_{ref}$).
@@ -112,28 +116,33 @@ To achieve the swing up, the system uses an energy based controller. This inject
 
 The total mechanical energy ($E$) of the pendulum is calculated as the sum of its kinetic and potential energy:
 \begin{equation}
+	\label{System energy}
 	E = \frac{1}{2} I_p \dot{\theta}^2 + m_p g l (\cos\theta - 1)
 \end{equation}
 The system defines the upward position as having an energy state of exactly 0.0.
 
 By subtracting $1.0$ from the cosine of theta, the potential energy is offset so that it peaks at zero when the pendulum is in the upward position. The controller then calculates the energy error as the difference between this target state (0.0) and the pendulum's current mechanical energy:
 \begin{equation}
+	\label{Energy error}
 	E_{error} = 0.0 - E
 \end{equation}
 To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction ($d$) of this acceleration is determined by the sign of the product of the angular velocity and the cosine of theta:
 \begin{equation}
+	\label{Cart travel direction}
 	d = sign(\dot{\theta} \cos\theta)
 \end{equation}
 
 \subsection{The Control Law \& Exit Condition}
 The control effort ($u$) is then calculated using the energy error, an energy gain constant, and the direction. However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart:
 \begin{equation}
+	\label{Energy control law}
 	u = k_{energy} E_{error} \cdot d + k_x x
 \end{equation}
 
 The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:
 
 \begin{itemize}
+\label{Swing exit condition}
 \item The position is within $\pm 30^\circ$ of the upward position ($|{\theta}| < \frac{\pi}{6}$ rad).
 \item The velocity is low enough for a controller to catch ($|\dot{\theta}| < 1$ rad/s).
 \end{itemize}
