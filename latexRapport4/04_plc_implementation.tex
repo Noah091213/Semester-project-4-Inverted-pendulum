@@ -7,7 +7,7 @@ Moving from a simulated environment to a physical one comes with a list of chall
 	force_{max} = \frac{torque_{max}}{roller_{diameter}} = \frac{0.72 Nm}{0.05 m} = 14.4 N
 \end{align}
 
-With the voltage input of the servo drive being $\pm 10$ V, a simple conversion rate from controller output ($u$) to the required voltage output can the be found:
+With the voltage input of the servo drive being $\pm 10$ V, a simple conversion rate from controller output ($u$) to the required voltage output can then be found:
 
 \begin{align}\label{voltageEquation}
 	voltage_{required} = \frac{force_{max}}{voltage_{max}} =\frac{14.4N}{10V} = 1.44 \frac{N}{V}
@@ -68,7 +68,7 @@ The inner loop is calculated in a similar fashion, with two notable differences.
 
 
 \section{Safety}
-In order to ensure a safe working environment, as well as limit any potential damage to the system while testing, a set of safety features is implemented. In addition to the physical emergency stop button, and sensors at the ends of the track, software is in place to stop the movement if the state exceeds a set of limitations. This includes checking the cart position and pendulum angle each cycle to ensure it is not straying excessively far from the center points. Additionally, the input to the servo drive is artificially limited to 8,8 N rather  than the full 14,4 N, as the cart would hit the end stops within a fraction of a second at this force.
+To prevent mechanical damage and ensure safe operation, two layers of protection are implemented. First, actuator saturation is applied, limiting the control effort to 8.8 N. This restricts the cart's maximum acceleration, preventing it from striking the track’s end-stops at excessive speeds. Second, a software safety monitor acts as an emergency watchdog; if the state variables (position or angle) exceed predefined safety thresholds, the system immediately disables the servo drive.
 
 
 
