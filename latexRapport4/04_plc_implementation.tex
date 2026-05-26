@@ -1,13 +1,13 @@
 \chapter{PLC Implementation}
 \label{chap:plc implementation}
 
-Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a servo drive which in turn is connected to the PLC via an analog signal. The servo drive can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. Based on the belt's roller diameter and the motor's max torque, the maximum force can be found:
+Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to an AC servomotor. The motor is connected to a servo drive which in turn is connected to the PLC via an analog signal. The servo drive can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. Based on the belt's roller diameter and the motor's max torque, the maximum force can be found:
 
 \begin{align}
 	force_{max} = \frac{torque_{max}}{roller_{diameter}} = \frac{0.72 Nm}{0.05 m} = 14.4 N
 \end{align}
 
-With the voltage input of the servo drive being $\pm 10$ V, a simple conversion rate from controller output ($u$) to require voltage output can the be found:
+With the voltage input of the servo drive being $\pm 10$ V, a simple conversion rate from controller output ($u$) to the required voltage output can the be found:
 
 \begin{align}\label{voltageEquation}
 	voltage_{required} = \frac{force_{max}}{voltage_{max}} =\frac{14.4N}{10V} = 1.44 \frac{N}{V}
