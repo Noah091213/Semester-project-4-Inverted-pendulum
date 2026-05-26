@@ -56,16 +56,18 @@ To eliminate these steady state offsets, the controller can be expanded into a L
 
 This new integral state is defined as:
 \begin{equation}
+	\label{LQI cart error value}
 	x_i = \int_{0}^{t} (x_{ref} - x) d\tau
 \end{equation}
 
 The standard state vector is then augmented from four variables to five:
 \begin{equation}
+	\label{LQI augmented state}
 	\textbf{X}_{aug} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
 \end{equation}
 
 \subsection{The Augmented Control Law}
-To implement LQI, the discrete system matrices ($A$ and $B$) and the penalty matrices ($Q$ and $R$) are expanded to fit this fifth state. The augmented $Q$ matrix receives a new diagonal value specifically to penalize the integral error.\newline
+To implement LQI, the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) and the penalty matrices ($\textbf{Q}$ and $\textbf{R}$) are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error.\newline
 
 Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
