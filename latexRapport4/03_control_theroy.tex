@@ -131,7 +131,11 @@ The control effort ($u$) is then calculated using the energy error, an energy ga
 	u = k_{energy} E_{error} \cdot d + k_x x
 \end{equation}
 
-The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:\newline\newline
-The position is within $\pm 30^\circ$ of the upward position ($|{\theta}| < \frac{\pi}{6}$ rad).\newline
-The velocity is low enough for a controller to catch ($|\dot{\theta}| < 1$ rad/s).\newline\newline
+The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:
+
+\begin{itemize}
+\item The position is within $\pm 30^\circ$ of the upward position ($|{\theta}| < \frac{\pi}{6}$ rad).
+\item The velocity is low enough for a controller to catch ($|\dot{\theta}| < 1$ rad/s).
+\end{itemize}
+
 Once the conditions are met all errors and variables from controllers are reset and the PLC state is switched to controller to balance the pendulum.
