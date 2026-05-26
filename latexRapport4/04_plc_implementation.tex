@@ -1,41 +1,74 @@
 \chapter{PLC Implementation}
 \label{chap:plc implementation}
 
-Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a servo drive which in turn is connected to the PLC via an analog signal. The servo drive can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. Based on the belt's roller diameter [m] and the motor's max torque [Nm], the maximum force [N] can be found:
+Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a servo drive which in turn is connected to the PLC via an analog signal. The servo drive can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. Based on the belt's roller diameter and the motor's max torque, the maximum force can be found:
 
 \begin{align}
-	maxForce = \frac{maxTorque}{rollerDiameter} = \frac{0.72}{0.05} = 14.4 [N]
+	force_{max} = \frac{torque_{max}}{roller_{diameter}} = \frac{0.72 Nm}{0.05 m} = 14.4 N
 \end{align}
 
-With the voltage input of the servo drive being $\pm 10$ V, a simple conversion from controller output ($u$) to require voltage output can the be found:
+With the voltage input of the servo drive being $\pm 10$ V, a simple conversion rate from controller output ($u$) to require voltage output can the be found:
+
+\begin{align}\label{voltageEquation}
+	voltage_{required} = \frac{force_{max}}{voltage_{max}} =\frac{14.4N}{10V} = 1.44 \frac{N}{V}
+\end{align}
+
+In order to interact with the controllers, the inputs from the encoders must be converted. The encoder for the pendulum has a resolution of 4096 units per full cycle and is reset such that the encoder shows 0 when the pendulum is hanging straight down. The controller expects the input to be in radians with 0 pointing straight up. Thus the conversion to $\theta$ can be done as follows:
+
+\begin{align}\label{PLC theta}
+	\theta = ((\theta_{encoder} \bmod{4096}) - 2048) \cdot \left(\frac{\pi \cdot 2}{4096}\right) [rad]
+\end{align}
+
+The conversion for the cart position $x$ was found using a measured distance. Moving the cart from one end of the track to the other resulted in the encoder showing 381,709 units while the cart moved 156.7 centimeters. Thus the amount of units per meter can be found as:
 
 \begin{align}
-	voltageRequired = u \cdot \frac{maxForce}{maxVoltage} = u \cdot \frac{14.4}{10} = u \cdot 1.44
+	\frac{381,709 units}{1.567 m} = 243,592 \frac{units}{m}
 \end{align}
 
-In order to interact with the controllers, the inputs from the encoders must be converted. The encoder for the pendulum has a resolution of 4096 units per full cycle and is reset such that the encoder shows 0 when the pendulum is hanging straight down. The controller expects the input to be in radians with 0 pointing straight up. Thus the conversion can be done as follows:
+The controllers expect $x$ to be in meters, with 0 at the center of the track, which is set to 191,000 units, roughly half of the full length. The conversion looks as follows:
 
 \begin{align}
-	theta [rad] = ((encoder_{pendulum} \bmod{4096}) - 2048) \cdot \left(\frac{\pi \cdot 2}{4096}\right)
+	x = \frac{x_{encoder} - 191,000}{243,592} [m]
 \end{align}
 
-The conversion for the cart position was found using a measured distance. Moving the cart from one end of the track to the other resulted in the encoder showing 381,709 units while the cart moved 156.7 centimeters. Thus the amount of units per meter can be found as:
+The controllers also need to be provided with the cart velocity $\dot{x}$ and angle velocity $\dot{\theta}$. Since the encoder data is the only measurement provided from the physical system, these values have to be calculated manually. The simplest way to calculate velocity at the current time step $k$ is to look at the change in position between the current and most recent step. However, with a cycle time $T_s$ of 1 ms, even small changes and inconsistencies can quickly have a large impact on the velocity when comparing two consecutive time steps. Therefore, a filter with a scaling factor $\alpha$ is implemented as part of the velocity calculations, which takes the following form:
 
 \begin{align}
-	unitsPerMeter = \frac{381,709}{1.567} = 243,592
+	\dot{\theta}_k &= \frac{\theta_{k} - \theta_{k-1}}{T_s} \\
+	\label{PLC theta dot}
+	\dot{\theta}_{k,filtered} &= (\alpha \cdot \dot{\theta}_k) + (1.0 - \alpha) \cdot \dot{\theta}_{k-1,filtered}
 \end{align}
 
-The controllers expect the input to be in meters, with 0 at the center of the track, which is set to 191,000 units, roughly half of the full length. The conversion looks as follows:
-
-\begin{align}
-	x [m] = \frac{encoder_{cart} - 191,000}{243,592}
-\end{align}
-
-For the controller, it is also necessary to have the velocity and angle velocity. Since the encoder data is the only measurement provided from the physical system, these values have to be calculated manually. The simplest way to calculate velocity at the current time step $k$ is to look at the change in position between the current and most recent step. However, with a cycle time of 1 ms, even small changes and inconsistencies can quickly have a large impact on the velocity when comparing two consecutive time steps. Therefore, a filter with a scaling factor $alpha$ is implemented as part of the velocity calculations, which takes the following form:
-
-\begin{align}
-	velocityUnfiltered_{k} &= \frac{theta_{k} - theta_{k-1}}{sampleTime} \\
-	velocityFiltered_{k} &= (alpha \cdot velocityUnfiltered_{k}) + (1.0 - alpha) \cdot velocityFiltered_{k-1}
-\end{align}
+The velocity for the cart is calculated using the same formula with $x$ instead of $\theta$
 
 \section{LQR}
+Having calculated $x$, $\dot{x}$, $\theta$ and $\dot{\theta}$, implementing the LQR controller is somewhat simple. In each cycle the output force $u$ is found by using the equation \ref{LQR control law}. This provides a force in newton which can be converted to a voltage output using equation \ref{voltageEquation}. The voltage is sent to the servo driver each cycle, affecting the cart with the desired force.
+
+\section{LQI}
+LQI has a rather similar implementation to LQR, using equation \ref{LQI control law}. The major difference being the addition of an integral term as seen in equation \ref{LQI cart error value}. The integral is calculated using backward integration in each cycle as follows:
+
+\begin{align}\label{PLC Integral}
+	x_{i,k} = x_{i,k-1} + x_k \cdot T_s
+\end{align}
+
+As $x$ describes the current distance from the reference $0.0$, it essentially acts as the error of the cart position $e_x$. One possible issue with integral terms is their ability to grow endlessly if an error persists. This would push the controller to output increasingly higher target forces, which may not be desirable. In order to limit this effect, a simple anti wind-up mechanism is implemented. In practice $x_{i,k}$ is checked each cycle and clamped to a max value if it exceeds it. 
+
+\section{PID}
+The cascaded PID controller has a slightly more involved implementation. Two similar control loops are set up to calculate the inner and outer loop respectively. Firstly, the outer cart loop needs to run to find the reference point for the inner pendulum loop. As shown in equation \ref{Cart PID}, 3 terms are necessary for this calculation, namely $e_x$, $\int_{0}^{\tau} e_x dt$ and $\frac{d e_x}{dt}$. As mentioned, $e_x$ is the same value as $x$ in the PLC implementation, thus the first term is satisfied. The integral term, can be satisfied by using equation \ref{PLC Integral}. That leaves the derivative term, which is found using equation \ref{PLC theta dot} with $x$ swapped in $\theta$'s place. The implemented calculation looks as follows:
+
+\begin{align}
+	\theta_{ref,k} = K_{p,x} \cdot x_k + K_{i,x} \cdot x_{i,k} + K_{d,x} \cdot \dot{x}_{k,filtered}
+\end{align}
+
+The inner loop is calculated in a similar fashion, with two notable differences. As the controller does not have an integral gain this part of the calculation is left out. As reference for $\theta$ is not a static 0.0, the $\theta$ equation \ref{PLC theta} cannot be used in place of $e_{\theta}$, instead equation \ref{Pendulum angle error} is used. The final calculation for each cycle becomes:
+
+\begin{align}
+	u_k = K_{p,\theta} \cdot e_{\theta,k} + K_{d,\theta} \cdot \dot{\theta}_{k,filtered}
+\end{align}
+
+
+\section{Safety}
+In order to ensure a safe working environment, as well as limit any potential damage to the system while testing, a set of safety features is implemented. In addition to the physical emergency stop button, and sensors at the ends of the track, software is in place to stop the movement if the state exceeds a set of limitations. This includes checking the cart position and pendulum angle each cycle to ensure it is not straying excessively far from the center points. Additionally, the input to the servo drive is artificially limited to 8,8 N rather  than the full 14,4 N, as the cart would hit the end stops within a fraction of a second at this force.
+
+
+
