@@ -13,37 +13,37 @@ The system matrices are first discretized using a Zero-Order Hold (ZOH) method. 
 The discrete LQR algorithm computes an optimal gain matrix $K$ by minimizing the discrete quadratic cost function:
 
 \begin{equation}
-	J = \sum_{k=0}^{\infty} \left( x_k^T Q x_k + u_k^T R u_k \right)
+	J = \sum_{k=0}^{\infty} \left( \textbf{X}_k^T \textbf{Q} \textbf{X}_k + u_k^T \textbf{R} u_k \right)
 \end{equation}
 
 Where:
 \begin{itemize}
-	\item $x_k$ is the state vector at time step $k$, defined as $x = [x_c, \dot{x}_c, \theta, \dot{\theta}]^T$.
+	\item $\textbf{X}_k$ is the state vector at time step $k$, defined as $\textbf{X} = [x, \dot{x}, \theta, \dot{\theta}]^T$.
 	\item $u_k$ is the control input (motor force).
-	\item $Q$ is a matrix that penalizes deviations in the system states (position and velocity errors).
-	\item $R$ is a matrix that penalizes the use of the actuator (control effort).
+	\item $\textbf{Q}$ is a matrix that penalizes deviations in the system states (position and velocity errors).
+	\item $\textbf{R}$ is a matrix that penalizes the use of the actuator (control effort).
 \end{itemize}
 
 \subsection{Tuning with Bryson's Rule}
-Deciding what to put in the $Q$ and $R$ matrices in an intuitive way, Bryson's Rule is applied. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
+Deciding what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way, Bryson's Rule is applied. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
 
 The maximum limits defined for this system are:
 \begin{itemize}
-	\item \textbf{Cart Position ($x_c$):} $0.5$ m
-	\item \textbf{Cart Velocity ($\dot{x}_c$):} $1.0$ m/s
+	\item \textbf{Cart Position ($x$):} $0.5$ m
+	\item \textbf{Cart Velocity ($\dot{x}$):} $1.0$ m/s
 	\item \textbf{Pendulum Angle ($\theta$):} $\frac{\pi}{4}$ rad
 	\item \textbf{Pendulum Velocity ($\dot{\theta}$):} $5.0$ rad/s
 	\item \textbf{Actuator Force ($F$):} $14.4$ N
 \end{itemize}
 
-Using these limits, the diagonal values of the $Q$ and $R$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
+Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with these $Q$ and $R$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain matrix $K$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
+Solving the algebraic Riccati equation with these $\textbf{Q}$ and $\textbf{R}$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain matrix $\textbf{K}$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
 
 \begin{equation}
 	\label{LQR control law}
-	u = -K x = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta})
+	u = -\textbf{K} \textbf{X} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta})
 \end{equation}
 
 \subsection{Poles \& Performance For LQR}
@@ -56,12 +56,12 @@ To eliminate these steady state offsets, the controller can be expanded into a L
 
 This new integral state is defined as:
 \begin{equation}
-	x_i = \int_{0}^{t} (x_{ref} - x_c) d\tau
+	x_i = \int_{0}^{t} (x_{ref} - x) d\tau
 \end{equation}
 
 The standard state vector is then augmented from four variables to five:
 \begin{equation}
-	x_{aug} = \left[ x_c, \dot{x}_c, \theta, \dot{\theta}, x_i \right]^T
+	\textbf{X}_{aug} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
 \end{equation}
 
 \subsection{The Augmented Control Law}
@@ -70,10 +70,10 @@ To implement LQI, the discrete system matrices ($A$ and $B$) and the penalty mat
 Solving the algebraic Riccati equation again for this augmented system gives the new gain matrix, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
-	u = -K_{aug} x_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta}) - K_i x_i
+	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta}) - K_5 x_i
 \end{equation}
 
-Because the $K_i x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will settle on its target position, regardless of small physical imperfections or friction.
+Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will settle on its target position, regardless of small physical imperfections or friction.
 
 \subsection{Poles \& Performance For LQI}
 
@@ -84,7 +84,7 @@ While modern statespace methods like LQR are very effective for multivariable sy
 The control system is divided into two nested feedback loops:
 \begin{itemize}
 	\item \textbf{Inner Loop (Pendulum):} This loop focuses entirely on stabilizing the pendulum angle ($\theta$). It uses a PD controller. The integral term is not used here, as it can introduce phase lag and worsen the stability of the highly unstable system of the inverted pendulum. The derivative term provides the critical damping required to catch and balance the pendulum.
-	\item \textbf{Outer Loop (Cart):} This loop controls the cart's position ($x_c$) using a full PID controller. Instead of outputting force directly, it calculates the necessary pendulum angle ($\theta_{ref}$) required to move the cart. The integral term is used in this outer loop to eliminate steady state positional errors caused by track friction or unmodeled slight inclinations in the setup.
+	\item \textbf{Outer Loop (Cart):} This loop controls the cart's position ($x$) using a full PID controller. Instead of outputting force directly, it calculates the necessary pendulum angle ($\theta_{ref}$) required to move the cart. The integral term is used in this outer loop to eliminate steady state positional errors caused by track friction or unmodeled slight inclinations in the setup.
 \end{itemize}
 For this cascade to function, the inner angle loop must be tuned to react significantly faster than the outer position loop, preventing the two controllers from fighting each other.
 
@@ -114,10 +114,10 @@ While Root Locus provides an intuitive, graphical understanding of system stabil
 \end{itemize}
 
 \subsection{Cascade Control Law}
-First, the cart's position error ($e_x$) is calculated by subtracting its current measured position from the target position:
+First, the cart's position error ($e_x$) is calculated by subtracting its current measured position ($x$) from the target position ($x_{ref}$):
 \begin{equation}
 	\label{Cart position error}
-	e_x = x_{ref} - x_c
+	e_x = x_{ref} - x
 \end{equation}
 
 It is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
@@ -153,22 +153,22 @@ The total mechanical energy ($E$) of the pendulum is calculated as the sum of it
 \end{equation}
 The system defines the upward position as having an energy state of exactly 0.0.
 
-By subtracting $1.0$ from the cosine of theta, the potential energy is offset so that it peaks at zero when the pendulum is in the upward position. The controller then calculates the energy error as the difference between this target state (0.0) and the pendulum's current mechanical energy:
+By subtracting $1.0$ from the cosine of theta, the potential energy is offset so that it peaks at zero when the pendulum is in the upward position. The controller then calculates the energy error ($e_E$) as the difference between this target state (0.0) and the pendulum's current mechanical energy:
 \begin{equation}
 	\label{Energy error}
-	E_{error} = 0.0 - E
+	e_E = 0.0 - E
 \end{equation}
-To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction ($d$) of this acceleration is determined by the sign of the product of the angular velocity and the cosine of theta:
+To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction ($s$) of this acceleration is determined by the sign of the product of the angular velocity and the cosine of theta:
 \begin{equation}
 	\label{Cart travel direction}
-	d = sign(\dot{\theta} \cos\theta)
+	s = sign(\dot{\theta} \cos\theta)
 \end{equation}
 
 \subsection{The Control Law \& Exit Condition}
-The control effort ($u$) is then calculated using the energy error, an energy gain constant, and the direction. However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart ($-k_x x$):
+The control effort ($u$) is then calculated using the energy error ($e_E$), an energy gain constant ($k_{E}$), and the direction ($s$). However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart ($-k x$):
 \begin{equation}
 	\label{Energy control law}
-	u = k_{energy} E_{error} \cdot d - k_x x
+	u = s k_{E} e_E - k x
 \end{equation}
 
 The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:
