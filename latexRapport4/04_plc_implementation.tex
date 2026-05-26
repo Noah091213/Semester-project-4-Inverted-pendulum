@@ -39,10 +39,10 @@ The controllers also need to be provided with the cart velocity $\dot{x}$ and an
 	\dot{\theta}_{k,filtered} &= (\alpha \cdot \dot{\theta}_k) + (1.0 - \alpha) \cdot \dot{\theta}_{k-1,filtered}
 \end{align}
 
-The velocity for the cart is calculated using the same formula with $x$ instead of $\theta$
+The velocity for the cart is calculated using the same formula with $x$ instead of $\theta$.
 
 \section{LQR}
-Having calculated $x$, $\dot{x}$, $\theta$ and $\dot{\theta}$, implementing the LQR controller is somewhat simple. In each cycle the output force $u$ is found by using the equation \ref{LQR control law}. This provides a force in newton which can be converted to a voltage output using equation \ref{voltageEquation}. The voltage is sent to the servo driver each cycle, affecting the cart with the desired force.
+Having calculated $x$, $\dot{x}$, $\theta$ and $\dot{\theta}$, implementing the LQR controller is somewhat simple. In each cycle the output force $u$ is found by using the equation \ref{LQR control law}. This provides a force in newton which can be converted to a voltage output using equation \ref{voltageEquation}. The voltage is sent to the servo drive each cycle, affecting the cart with the desired force.
 
 \section{LQI}
 LQI has a rather similar implementation to LQR, using equation \ref{LQI control law}. The major difference being the addition of an integral term as seen in equation \ref{LQI cart error value}. The integral is calculated using backward integration in each cycle as follows:

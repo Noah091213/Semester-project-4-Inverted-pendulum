@@ -4,27 +4,32 @@
 
 Control systems play an essential role in modern automation and robotics, where precise and stable motion is required in order to achieve reliable system behavior. From industrial robots and autonomous vehicles to balancing systems and advanced manufacturing equipment, controllers are widely used to regulate unstable and dynamic systems.
 
-One of the most well-known and challenging control problems is the inverted pendulum system. The system is naturally unstable, meaning that even small disturbances can cause the pendulum to fall if no corrective control action is applied. Due to its nonlinear and unstable behavior, the inverted pendulum has become a classical benchmark problem within control engineering and is frequently used for research, education, and validation of different control strategies.
+One of the most well-known and challenging control problems is the inverted pendulum system. The system is naturally unstable, meaning that even small disturbances can cause the pendulum to fall if no corrective action is applied. Due to its nonlinear and unstable behavior, the inverted pendulum has become a classical benchmark problem within control engineering and is frequently used for research, education, and validation of different control strategies.
 
 The purpose of this project is to model, simulate, and control an inverted pendulum mounted on a conveyor-driven cart system. The project combines several engineering disciplines, including dynamic modelling, simulation, control theory, PLC implementation, and automation systems integration.
 
-To achieve stable balancing of the pendulum, mathematical models of the system were developed using both the Newton-Euler and Euler-Lagrange methods. The resulting dynamic models were linearized around the upright equilibrium position and used for simulation and controller development in MATLAB/Python. Different control strategies were then implemented and evaluated based on their ability to stabilize the pendulum and maintain controlled cart movement.
+\comment{To achieve stable balancing of the pendulum, mathematical models of the system were developed using both the Newton-Euler and Euler-Lagrange methods. The resulting dynamic models were linearized around the upright equilibrium position and used for simulation and controller development in MATLAB/Python. Different control strategies were then implemented and evaluated based on their ability to stabilize the pendulum and maintain controlled cart movement. \\
+In addition to simulation, the project also focuses on implementation aspects related to real automation systems. This includes communication between software and hardware, PLC-based control implementation, and validation of the simulated models using the physical setup. \\
+The project therefore demonstrates both the theoretical and practical challenges associated with modelling and controlling unstable dynamic systems in modern automation engineering.
+}{Consider moving to abstract}
 
-In addition to simulation, the project also focuses on implementation aspects related to real automation systems. This includes communication between software and hardware, PLC-based control implementation, and validation of the simulated models using the physical setup.
-
-The project therefore demonstrates both the theoretical and practical challenges associated with modelling and controlling unstable dynamic systems in modern automation engineering. 
 
 \section{Project Goals}
 
-Using a PLC-controlled motor, conveyor-driven cart system, inverted pendulum, and two different controller designs, the objective of this project is to stabilize the inverted pendulum in its upright position by regulating the force applied by the motor. The performance of each controller is evaluated by comparing the behavior of the physical system with the corresponding simulation model. The controller with the response most closely matching the simulated behavior while maintaining stable pendulum balancing is considered the most successful controller implementation.
+Using a PLC-controlled motor, conveyor-driven cart system, inverted pendulum, and different controller designs, the objective of this project is to stabilize the inverted pendulum in its upright position by regulating the force applied by the motor. The performance of each controller is evaluated by comparing the behavior of the physical system with the corresponding simulation model, in addition to comparing the performance parameters between the controllers. The controller with the response most closely matching the simulated behavior and target performance requirements while maintaining stable pendulum balancing is considered the most successful controller implementation.
 
    
 \section{Problem Definition}
 
-The inverted pendulum is an unstable dynamic system that requires continuous feedback and control in order to remain balanced in its upright position. The main objective of this project is to model, simulate, and implement controllers capable of stabilizing the pendulum by controlling the movement of the conveyor-driven cart.
+\comment{The inverted pendulum is an unstable dynamic system that requires continuous feedback and control in order to remain balanced in its upright position. The main objective of this project is to model, simulate, and implement controllers capable of stabilizing the pendulum by controlling the movement of the conveyor-driven cart. \\
+The performance of the controllers is evaluated based on their ability to maintain stable pendulum balancing and achieve behavior similar to the simulated system response.}{convert to list:}
 
-The performance of the controllers is evaluated based on their ability to maintain stable pendulum balancing and achieve behavior similar to the simulated system response.
-
+\textbf{Balance an inverted pendulum attached to a cart}
+\begin{itemize}[noitemsep]
+	\item Model the system
+	\item Implement classical and modern controllers
+	\item Compare the responses of the different control strategies
+\end{itemize}
 
 \section{Constraints \& Limitations}
 The project is subject to several physical, technical, and implementation-related limitations that influence both the modelling process and the achievable control performance of the system.
@@ -37,31 +42,31 @@ The physical setup also introduces uncertainties and non-ideal effects that are 
 
 From a control perspective, the system represents a nonlinear and inherently unstable problem. To simplify the controller design, the system dynamics were linearized around the upright equilibrium position using small-angle approximations. This means that the mathematical model is primarily valid for small pendulum angles close to the vertical operating point. Large disturbances or extreme pendulum angles may therefore result in deviations between the simulated and physical system behavior.
 
-The PLC implementation also introduces computational and communication-related limitations. The controller execution frequency, sensor sampling rate, and communication delays between the PLC and external software systems affect the responsiveness and stability of the implemented controller.Additionally, communication delays introduced through OPC UA may affect the responsiveness and real-time performance of the implemented control system compared to the ideal simulation environment.
+The PLC implementation also introduces computational and communication-related limitations. The controller execution frequency, encoder resolution, and communication delays between the PLC and external software systems affect the responsiveness and stability of the implemented controller. Additionally, communication delays introduced through OPC UA may affect the responsiveness and real-time performance of the implemented control system compared to the ideal simulation environment.
 
-Despite these limitations, the system provides a realistic platform for investigating modelling techniques, controller design, simulation validation, and practical implementation challenges related to unstable automation systems.
+\comment{Despite these limitations, the system provides a realistic platform for investigating modelling techniques, controller design, simulation validation, and practical implementation challenges related to unstable automation systems.}{discussion, consider removing}
 
 
 
-\section{System OverView}
-The system used in this project consists of an inverted pendulum mounted on a cart moving along a conveyor-driven rail. The cart is actuated through a motor-driven conveyor system, which applies a horizontal force to the cart in order to stabilize the pendulum in its upright position.
+\section{System Overview}
+\remove{The system used in this project consists of an inverted pendulum mounted on a cart moving along a conveyor-driven rail. The cart is actuated through a motor-driven conveyor system, which applies a horizontal force to the cart in order to stabilize the pendulum in its upright position.}
 
-The inverted pendulum represents a classical unstable control problem, where continuous feedback and fast controller response are required to maintain stability. Since the upright equilibrium position is inherently unstable, even small disturbances can cause the pendulum to fall if no corrective action is applied.
+\remove{The inverted pendulum represents a classical unstable control problem, where continuous feedback and fast controller response are required to maintain stability. Since the upright equilibrium position is inherently unstable, even small disturbances can cause the pendulum to fall if no corrective action is applied.}
 
 The physical setup consists of several interacting subsystems, including:
 
 \begin{itemize}
-	\item A conveyor-driven cart system
+	\item A conveyor-driven cart system using an AC servomotor
 	\item An inverted pendulum with an attached tip mass
-	\item Sensors used for measuring pendulum angle and cart position
+	\item Encoders used for measuring pendulum angle and cart position
 	\item A PLC-based control system
 	\item Motor drivers and communication interfaces
 \end{itemize}
 
-The controller continuously monitors the state of the system and calculates the required control action needed to stabilize the pendulum. The calculated control signal regulates the movement of the motor, thereby controlling the horizontal motion of the cart.
+\remove{The controller continuously monitors the state of the system and calculates the required control action needed to stabilize the pendulum. The calculated control signal regulates the movement of the motor, thereby controlling the horizontal motion of the cart.}
 
-To develop the controller, a mathematical model of the system was established using classical dynamic modelling techniques. The model was implemented and simulated in MATLAB/Python before being applied to the physical system through the PLC implementation.
+\remove{To develop the controller, a mathematical model of the system was established using classical dynamic modelling techniques. The model was implemented and simulated in MATLAB/Python before being applied to the physical system through the PLC implementation.}
 
-The project combines modelling, simulation, control theory, automation, and practical implementation in order to investigate how unstable dynamic systems can be stabilized using feedback control.
+\remove{The project combines modelling, simulation, control theory, automation, and practical implementation in order to investigate how unstable dynamic systems can be stabilized using feedback control.}
 
-Figure \ref{fig:system_model} illustrates the simplified dynamic model of the inverted pendulum system used throughout the project.
+Figure \ref{fig:system_model} \comment{illustrates the simplified dynamic model of the inverted pendulum system used throughout the project.}{consider moving both simplified model figure and system parameters table to this section}
