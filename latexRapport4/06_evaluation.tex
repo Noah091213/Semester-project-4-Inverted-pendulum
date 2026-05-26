@@ -20,6 +20,8 @@ The impulse test was done by applying a single impulse of 6 newtons, for 50 mill
 	\label{fig:impulse_cart_pos}   
 \end{figure}
 
+The impulse acts differntly for all 3 controllers specificly because of the starting condition of when the impulse happens. As the graph shows, all 3 controllers are at a different point in either steady or swinging one or the other way. Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
+
 \begin{figure}[H]
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Impulse_pend_angle.png}
@@ -27,12 +29,16 @@ The impulse test was done by applying a single impulse of 6 newtons, for 50 mill
 	\label{fig:impulse_pend_angle}   
 \end{figure}
 
+Even though the cart position varies by a bit between all 3 controllers, the angle itself is almost the exact same, giving a very similar starting condition angle wise for the impulse. A sharp peak that quickly mellows out as the controller catches the the pendulum and balances again.
+
 \begin{figure}[H]
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Impulse_motor_u.png}
 	\caption{Motor force during the impulse test.}
 	\label{fig:impulse_motor_u}   
 \end{figure}
+
+The motor force is very similar for all 3 controllers. It is very steady in the beginning, but with a slight offset. When the impulse hits, the force swings until it settles back down to a similar point as the starting level.
 
 
 \subsection{Step response test}
@@ -46,12 +52,16 @@ The step test was done similarly to the impulse, but instead it was applied for 
 	\label{fig:Step_cart_pos}   
 \end{figure}
 
+The cart position in the step test shows the LQR controller moving to one side for the entire duration of the step. However both the LQI and PID controllers go to the side, but gravitate back towards the center, until the step is over, where it jerks to the opposite side, then settles back to the middle again.
+
 \begin{figure}[H]
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Step_pend_angle.png}
 	\caption{Pendulum angle during the step response test.}
 	\label{fig:Step_pend_angle}   
 \end{figure}
+
+The pendulum has a very similar, yet opposite movement to the cart itself. At the start of the step, all 3 controllers swing to one side due to the push, and at the end of the step, they swing the oppositre way, as the step ends and the cart moves the other direction.
 
 \begin{figure}[H]
     \centering
@@ -60,6 +70,7 @@ The step test was done similarly to the impulse, but instead it was applied for 
 	\label{fig:Step_motor_u}   
 \end{figure}
 
+The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Do notice that this graph only shows 3.5 seconds, but look the same at the end of the step. This can be seen in the data in REF[]
 
 \subsection{Swing up test}
 
