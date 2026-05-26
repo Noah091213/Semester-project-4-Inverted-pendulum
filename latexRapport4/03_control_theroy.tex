@@ -57,10 +57,10 @@ To eliminate these steady state offsets, the controller can be expanded into a L
 This new integral state is defined as:
 \begin{equation}
 	\label{LQI cart error value}
-	x_i = \int_{0}^{t} (x_{ref} - x) d\tau
+	x_i = \int_{0}^{\tau} (x_{ref} - x) dt
 \end{equation}
 
-The standard state vector is then augmented from four variables to five:
+Where $\tau$ is the current moment in time. The standard state vector is then augmented from four variables to five:
 \begin{equation}
 	\label{LQI augmented state}
 	\textbf{X}_{aug} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
@@ -69,7 +69,7 @@ The standard state vector is then augmented from four variables to five:
 \subsection{The Augmented Control Law}
 To implement LQI, the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) and the penalty matrices ($\textbf{Q}$ and $\textbf{R}$) are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error.\newline
 
-Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
+Solving the algebraic Riccati equation again for this augmented system together with a max parameter for the integral value gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
 	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
@@ -125,7 +125,7 @@ First, the cart's position error ($e_x$) is calculated by subtracting its curren
 It is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
 \begin{equation}
 	\label{Cart PID}
-	\theta_{ref} = K_{p,x} e_x + K_{i,x} \int e_x dt + K_{d,x} \frac{d e_x}{dt}
+	\theta_{ref} = K_{p,x} e_x + K_{i,x} \int_{0}^{\tau} e_x dt + K_{d,x} \frac{d e_x}{dt}
 \end{equation}
 
 Once the reference angle ($\theta_{ref}$) is calculated by the outer loop, the inner loop calculates the pendulum's current angular error ($e_\theta$):
