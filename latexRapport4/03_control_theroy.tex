@@ -1,2 +1,184 @@
 \chapter{Control theroy}
 \label{chap:control theroy}
+There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt in this setup, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
+
+\section{LQR controller}
+One way to stabilize the inverted pendulum in its upward position, is a Linear Quadratic Regulator (LQR). LQR is an "optimal" multivariable controller that determines the best possible feedback gains by balancing the trade off between keeping the system states close to zero and minimizing the control effort used to do so.
+
+\subsection{Discretization for PLC}
+Because the controller will be running on a B\&R Programmable Logic Controller (PLC) running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
+The system matrices are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the digital sampling of the PLC.
+
+\subsection{The Cost Function and Weighting Matrices}
+The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function:
+
+\begin{equation}
+	J = \sum_{k=0}^{\infty} \left( \textbf{X}_k^T \textbf{Q} \textbf{X}_k + u_k^T \textbf{R} u_k \right)
+\end{equation}
+
+Where:
+\begin{itemize}
+	\item $\textbf{X}_k$ is the state vector at time step $k$, defined as $\textbf{X} = [x, \dot{x}, \theta, \dot{\theta}]^T$.
+	\item $u_k$ is the control input (motor force).
+	\item $\textbf{Q}$ is a matrix that penalizes deviations in the system states (position and velocity errors).
+	\item $\textbf{R}$ is a matrix that penalizes the use of the actuator (control effort).
+\end{itemize}
+
+\subsection{Tuning with Bryson's Rule}
+Deciding what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way, Bryson's Rule is applied. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
+
+The maximum limits defined for this system are:
+\begin{itemize}
+	\item \textbf{Cart Position ($x$):} $0.5$ m
+	\item \textbf{Cart Velocity ($\dot{x}$):} $1.0$ m/s
+	\item \textbf{Pendulum Angle ($\theta$):} $\frac{\pi}{4}$ rad
+	\item \textbf{Pendulum Velocity ($\dot{\theta}$):} $5.0$ rad/s
+	\item \textbf{Output Force ($u$):} $14.4$ N
+\end{itemize}
+
+Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
+
+\subsection{The Control Law}
+Solving the algebraic Riccati equation with these $\textbf{Q}$ and $\textbf{R}$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain vector $\textbf{K}$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
+
+\begin{equation}
+	\label{LQR control law}
+	u = -\textbf{K} \textbf{X} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta})
+\end{equation}
+
+\subsection{Poles \& Performance For LQR}
+
+\section{LQI controller}
+While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodeled dynamics or constant disturbances in the system, such as friction in the belt which the cart sits on, inclinations in the setup or other forces affecting the cart or pendulum.
+
+\subsection{Augmenting the State Vector}
+To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the "I" term in a PID controller.\newline
+
+This new integral state is defined as:
+\begin{equation}
+	\label{LQI cart error value}
+	x_i = \int_{0}^{\tau} (x_{ref} - x) dt
+\end{equation}
+
+Where $\tau$ is the current moment in time. The standard state vector is then augmented from four variables to five:
+\begin{equation}
+	\label{LQI augmented state}
+	\textbf{X}_{aug} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
+\end{equation}
+
+\subsection{The Augmented Control Law}
+To implement LQI, the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) and the penalty matrices ($\textbf{Q}$ and $\textbf{R}$) are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error.\newline
+
+Solving the algebraic Riccati equation again for this augmented system together with a max parameter for the integral value gives the new gain vector, and the resulting control law becomes:
+\begin{equation}
+	\label{LQI control law}
+	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
+\end{equation}
+
+Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
+
+\subsection{Poles \& Performance For LQI}
+
+\section{Cascaded PID controller}
+While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart together with the transfer function derived in (reference to system modelling here!).
+
+\subsection{Cascade setup}
+The control system is divided into two nested feedback loops:
+\begin{itemize}
+	\item \textbf{Inner Loop (Pendulum):} This loop focuses entirely on stabilizing the pendulum angle ($\theta$). It uses a PD controller. The integral term is not used here, as it can introduce phase lag and worsen the stability of the highly unstable system of the inverted pendulum. The derivative term provides the critical damping required to catch and balance the pendulum.
+	\item \textbf{Outer Loop (Cart):} This loop controls the cart's position ($x$) using a full PID controller. Instead of outputting force directly, it calculates the necessary pendulum angle ($\theta_{ref}$) required to move the cart. The integral term is used in this outer loop to eliminate steady state positional errors caused by track friction or unmodeled slight inclinations in the setup.
+\end{itemize}
+For this cascade to function, the inner angle loop must be tuned to react significantly faster than the outer position loop, preventing the two controllers from fighting each other.
+
+\subsection{Tuning via Root Locus}
+The primary method used for tuning these controllers is the Root Locus technique, which visualizes the paths of the closed loop poles as a control gain is varied.\newline
+
+The transfer function for the inner PD controller is:
+\begin{equation}
+	\label{PD controller}
+	C_{PD}(s) = K_{p,\theta} + K_{d,\theta} s
+\end{equation}
+This structure adds a single zero to the open loop system. The inner loop is tuned first by strategically placing this zero on the s-plane to "pull" the unstable open loop poles of the pendulum into the stable left-half plane (LHP), ensuring the system meets the performance requirements.\newline
+
+Once the inner loop is closed and verified to meet the goals, the outer loop is tuned. The transfer function for the outer PID controller is:
+\begin{equation}
+	\label{PID controller}
+	C_{PID}(s) = K_{p,x} + \frac{K_{i,x}}{s} + K_{d,x} s = \frac{K_{d,x} s^2 + K_{p,x} s + K_{i,x}}{s}
+\end{equation}
+The PID controller introduces one pole at the origin (from the integrator) and two zeros. Using Root Locus on the new combined system, these zeros are placed to change the trajectory of the cart's poles. The goal here is to target ensure the cart moves slowly so that the pendulum is not destabilzed by aggressive changes to the pendulum angle ($\theta_{ref}$).
+
+\subsection{Alternative Tuning Methods}
+While Root Locus provides an intuitive, graphical understanding of system stability, several other tuning methodologies exist to refine the initial gains:
+
+\begin{itemize}
+	\item \textbf{Frequency Response (Bode/Nyquist Plots):} This method shapes the open loop frequency response to achieve specific gain and phase margins. It is particularly useful for ensuring the system remains stable despite unmodeled high frequency dynamics (like sensor noise or actuator lag) and for precisely decoupling the bandwidths of the inner and outer loops.
+	\item \textbf{Computational Optimization:} Software tools (such as MATLAB's \texttt{pidtune}) can algorithmically calculate gains by minimizing a specified cost function, such as the Integral Time Absolute Error (ITAE). This approach systematically balances rise time, settling time, and overshoot against a mathematically defined performance metric.
+\end{itemize}
+
+\subsection{Cascade Control Law}
+First, the cart's position error ($e_x$) is calculated by subtracting its current measured position ($x$) from the target position ($x_{ref}$):
+\begin{equation}
+	\label{Cart position error}
+	e_x = x_{ref} - x
+\end{equation}
+
+It is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
+\begin{equation}
+	\label{Cart PID}
+	\theta_{ref} = K_{p,x} e_x + K_{i,x} \int_{0}^{\tau} e_x dt + K_{d,x} \frac{d e_x}{dt}
+\end{equation}
+
+Once the reference angle ($\theta_{ref}$) is calculated by the outer loop, the inner loop calculates the pendulum's current angular error ($e_\theta$):
+\begin{equation}
+	\label{Pendulum angle error}
+	e_\theta = \theta_{ref} - \theta
+\end{equation}
+
+The angular error is then multiplied by the proportional gain ($K_{p,\theta}$), and its rate of change is multiplied by the derivative gain ($K_{d,\theta}$). Adding these two terms gives the final control law, which outputs the force ($u$):
+\begin{equation}
+	\label{Pendulum PD}
+	u = K_{p,\theta} e_\theta + K_{d,\theta} \frac{d e_\theta}{dt}
+\end{equation}
+
+\subsection{Poles \& Performance For Cascade}
+
+\section{Swing up}
+Something that is not nescessary for balancing the pendulum itself is swing up, instead the purpose of this is to get the pendulum from hanging downward to within a specific range of the upward position where a controller can catch it. This makes the testing process of the different controllers much easier and the overall implementation and use of the system simpler.
+
+\subsection{The Energy Controller}
+To achieve the swing up, the system uses an energy based controller. This injects kinetic energy into the pendulum until its total mechanical energy equals the potential energy required to stand upright.
+
+The total mechanical energy ($E$) of the pendulum is calculated as the sum of its kinetic and potential energy:
+\begin{equation}
+	\label{System energy}
+	E = \frac{1}{2} I_p \dot{\theta}^2 + m_p g l (\cos\theta - 1)
+\end{equation}
+The system defines the upward position as having an energy state of 0.0.
+
+By subtracting $1.0$ from the cosine of theta, the potential energy is offset so that it peaks at zero when the pendulum is in the upward position. The controller then calculates the energy error ($e_E$) as the difference between this target state (0.0) and the pendulum's current mechanical energy:
+\begin{equation}
+	\label{Energy error}
+	e_E = 0.0 - E
+\end{equation}
+To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction ($s$) of this acceleration is determined by the sign of the product of the angular velocity and the cosine of theta:
+\begin{equation}
+	\label{Cart travel direction}
+	s = sign(\dot{\theta} \cos\theta)
+\end{equation}
+
+\subsection{The Control Law \& Exit Condition}
+The control effort ($u$) is then calculated using the energy error ($e_E$), an energy gain constant ($k_{E}$), and the direction ($s$). However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart ($-k x$):
+\begin{equation}
+	\label{Energy control law}
+	u = s k_{E} e_E - k x
+\end{equation}
+
+The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:
+
+\begin{itemize}
+\label{Swing exit condition}
+\item The position is within $\pm 30^\circ$ of the upward position ($|{\theta}| < \frac{\pi}{6}$ rad).
+\item The velocity is low enough for a controller to catch ($|\dot{\theta}| < 1$ rad/s).
+\end{itemize}
+
+Once the conditions are met all errors and variables from controllers are reset and the PLC state is switched to controller to balance the pendulum.

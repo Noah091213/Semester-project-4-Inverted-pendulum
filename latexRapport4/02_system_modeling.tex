@@ -2,13 +2,14 @@
 \label{chap:system modeling}
 \section{Modelling of the Inverted Pendulum System}
 
-\subsection{System Overview}
 
-The purpose of the modelling process is to obtain a mathematical representation of the inverted pendulum system, which can later be used for simulation and controller design. A mathematical model makes it possible to analyze the dynamic behavior of the system and evaluate different control strategies before implementation on the physical setup.
+The purpose of the modelling process is to obtain a mathematical representation of the inverted pendulum system suitable for simulation and controller design. A mathematical model makes it possible to analyze the dynamic behavior of the system and evaluate different control strategies before implementation on the physical setup.
 
-In this project, two classical modelling approaches were used: the Newton-Euler method and the Euler-Lagrange method. Both methods describe the dynamics of the system, but from different physical perspectives. The Newton-Euler method is based on force and moment balances, while the Euler-Lagrange method is based on the kinetic and potential energy of the system. The resulting nonlinear equations were linearized around the upright equilibrium position to simplify the controller design and implementation in MATLAB/Simulink.
+In this project, two classical modelling approaches were used: the Newton-Euler method and the Euler-Lagrange method. Both methods describe the dynamics of the system from different physical perspectives. The Newton-Euler method is based on force and moment balances, while the Euler-Lagrange method is based on the kinetic and potential energy of the system.
 
-The physical system consists of a cart with an attached inverted pendulum and an additional tip mass mounted at the end of the pendulum rod. The cart is constrained to move horizontally along a conveyor-driven rail, while the pendulum is free to rotate around its pivot point. The system is actuated by an external force $F$, which controls the horizontal movement of the cart. The goal of the system is to keep the pendulum balanced in its upright position while controlling the motion of the cart.
+Both modelling approaches resulted in coupled nonlinear differential equations describing the dynamic behavior of the system. To simplify the controller design and simulation process, the nonlinear equations were linearized around the upright equilibrium position using small-angle approximations.
+
+The resulting linearized models were transformed into transfer functions and state-space representations suitable for simulation, controller development, and implementation in MATLAB/Python.
 
 The generalized coordinates used to describe the system are:
 
@@ -17,7 +18,7 @@ The generalized coordinates used to describe the system are:
 	\item $\theta$: pendulum angle relative to the vertical axis
 \end{itemize}
 
-The physical parameters used in the model are shown in Table \ref{tab:parameters}.
+The physical parameters used in the model are shown in Table \ref{tab:system_parameters}.
 
 The following assumptions were made during the modelling process:
 
