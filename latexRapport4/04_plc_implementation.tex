@@ -1,17 +1,16 @@
 \chapter{PLC Implementation}
 \label{chap:plc implementation}
 
-Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a motor controller which in turn is connected to the PLC via an analog signal. The motor controller can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. The scaling factor is found as follows based on the resolution of the analog signal (16 bit integer), belt's roller diameter [meter] and motor's max torque [newton meter]:
-
-\begin{align}
-	scalingFactor = \left\lfloor \frac{analogResolution \cdot rollerDiameter}{maxTorque} \right\rfloor 
-	= \left\lfloor\frac{32,768 \cdot 0.05}{0.72}\right\rfloor = 2,275
-\end{align}
-
-This also allows for the calculation of the maximum possible force that can be applied to the cart:
+Moving from a simulated environment to a physical one comes with a list of challenges that need to solved. Firstly, control of the cart must be understood. The cart is driven along a rail by a belt, attached to a DC motor. The motor is connected to a servo drive which in turn is connected to the PLC via an analog signal. The servo drive can be set to a target torque mode, which aims to hit a percentage of the maximum torque of the motor based on the analog input. With this information, a scaling factor can be used when the PLC needs to calculate how much voltage needs to be send via the analog signal to apply a certain torque in newton on to the cart. Based on the belt's roller diameter [m] and the motor's max torque [Nm], the maximum force [N] can be found:
 
 \begin{align}
 	maxForce = \frac{maxTorque}{rollerDiameter} = \frac{0.72}{0.05} = 14.4 [N]
+\end{align}
+
+With the voltage input of the servo drive being $\pm 10$ V, a simple conversion from controller output ($u$) to require voltage output can the be found:
+
+\begin{align}
+	voltageRequired = u \cdot \frac{maxForce}{maxVoltage} = u \cdot \frac{14.4}{10} = u \cdot 1.44
 \end{align}
 
 In order to interact with the controllers, the inputs from the encoders must be converted. The encoder for the pendulum has a resolution of 4096 units per full cycle and is reset such that the encoder shows 0 when the pendulum is hanging straight down. The controller expects the input to be in radians with 0 pointing straight up. Thus the conversion can be done as follows:
@@ -31,3 +30,12 @@ The controllers expect the input to be in meters, with 0 at the center of the tr
 \begin{align}
 	x [m] = \frac{encoder_{cart} - 191,000}{243,592}
 \end{align}
+
+For the controller, it is also necessary to have the velocity and angle velocity. Since the encoder data is the only measurement provided from the physical system, these values have to be calculated manually. The simplest way to calculate velocity at the current time step $k$ is to look at the change in position between the current and most recent step. However, with a cycle time of 1 ms, even small changes and inconsistencies can quickly have a large impact on the velocity when comparing two consecutive time steps. Therefore, a filter with a scaling factor $alpha$ is implemented as part of the velocity calculations, which takes the following form:
+
+\begin{align}
+	velocityUnfiltered_{k} &= \frac{theta_{k} - theta_{k-1}}{sampleTime} \\
+	velocityFiltered_{k} &= (alpha \cdot velocityUnfiltered_{k}) + (1.0 - alpha) \cdot velocityFiltered_{k-1}
+\end{align}
+
+\section{LQR}
