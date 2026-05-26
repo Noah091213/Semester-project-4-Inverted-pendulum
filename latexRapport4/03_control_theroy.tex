@@ -112,7 +112,7 @@ To achieve the swing up, the system uses an energy based controller. This inject
 
 The total mechanical energy ($E$) of the pendulum is calculated as the sum of its kinetic and potential energy:
 \begin{equation}
-	E = \frac{1}{2} I_p \dot{\theta}_{filtered}^2 + m_p g l (\cos\theta - 1)
+	E = \frac{1}{2} I_p \dot{\theta}^2 + m_p g l (\cos\theta - 1)
 \end{equation}
 The system defines the upward position as having an energy state of exactly 0.0.
 
@@ -120,12 +120,15 @@ By subtracting $1.0$ from the cosine of theta, the potential energy is offset so
 \begin{equation}
 	E_{error} = 0.0 - E
 \end{equation}
-To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction of this acceleration is determined by the sign of the product of the filtered angular velocity and the cosine of theta ($\dot{\theta}_{filtered} \cos\theta$).
+To put more energy into the pendulum, the controller must accelerate the cart in step with the pendulum's swing. The direction ($d$) of this acceleration is determined by the sign of the product of the angular velocity and the cosine of theta:
+\begin{equation}
+	d = sign(\dot{\theta} \cos\theta)
+\end{equation}
 
 \subsection{The Control Law \& Exit Condition}
-The control effort ($u$) is then calculated using the energy error, an energy gain constant, and the direction ($d$). However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart:
+The control effort ($u$) is then calculated using the energy error, an energy gain constant, and the direction. However, just putting in energy to the pendulum could cause the cart to drift so a small spring force is added to gently center the cart:
 \begin{equation}
-	u = k_{energy} E_{error} \cdot \text{direction} + k_x x
+	u = k_{energy} E_{error} \cdot d + k_x x
 \end{equation}
 
 The swing up PLC state always monitors the pendulum's position and velocity to figure out if it is safe to hand over to a controller. This "catch condition" triggers only when two conditions are met at the same time:\newline\newline
