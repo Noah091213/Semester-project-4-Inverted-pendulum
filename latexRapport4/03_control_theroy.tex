@@ -10,7 +10,7 @@ Because the controller will be running on a B\&R Programmable Logic Controller (
 The system matrices are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the digital sampling of the PLC.
 
 \subsection{The Cost Function and Weighting Matrices}
-The discrete LQR algorithm computes an optimal gain matrix $K$ by minimizing the discrete quadratic cost function:
+The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function:
 
 \begin{equation}
 	J = \sum_{k=0}^{\infty} \left( \textbf{X}_k^T \textbf{Q} \textbf{X}_k + u_k^T \textbf{R} u_k \right)
@@ -70,7 +70,7 @@ To implement LQI, the discrete system matrices ($A$ and $B$) and the penalty mat
 Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
-	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x_c + K_2 \dot{x}_c + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
+	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
 \end{equation}
 
 Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
