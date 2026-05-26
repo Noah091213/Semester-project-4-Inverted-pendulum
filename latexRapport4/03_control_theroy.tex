@@ -39,7 +39,7 @@ The maximum limits defined for this system are:
 Using these limits, the diagonal values of the $Q$ and $R$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with these $Q$ and $R$ weights yields the optimal feedback gain matrix $K$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
+Solving the algebraic Riccati equation with these $Q$ and $R$ weights and the statespace (reference to system modelling here!) gives the optimal feedback gain matrix $K$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
 
 \begin{equation}
 	\label{LQR control law}
@@ -78,7 +78,7 @@ Because the $K_i x_i$ term continuously builds up control effort as long as a th
 \subsection{Poles \& Performance For LQI}
 
 \section{Cascaded PID controller}
-While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart.
+While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart together with the transfer function derived in (reference to system modelling here!).
 
 \subsection{Cascade setup}
 The control system is divided into two nested feedback loops:
