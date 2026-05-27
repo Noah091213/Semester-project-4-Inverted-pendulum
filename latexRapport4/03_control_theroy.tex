@@ -2,7 +2,7 @@
 \label{chap:control theory}
 There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt\remove{ in this setup}, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
 
-\section{LQR controller}
+\section{LQR Controller}
 One way to stabilize the inverted pendulum in its upward position, is a Linear Quadratic Regulator (LQR). LQR is an "optimal" multivariable controller that determines the best possible feedback gains by balancing the trade off between keeping the system states close to zero and minimizing the control effort used to do so.
 
 \subsection{Discretization for PLC}
@@ -46,13 +46,13 @@ Solving the algebraic Riccati equation with the\remove{se} weight matrices ($\te
 	u = -\textbf{K} \textbf{X} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta})
 \end{equation}
 
-\subsection{Poles \& Performance For LQR}
+\subsection{Poles \& Performance for LQR}
 \replace{Evaluating}{To evaluate} the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
 \begin{equation}
 	p_1 = -44.45, \quad p_{2,3} = -5.98 \pm 0.68i, \quad p_4 = -1.95
 \end{equation}
 
-Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles are calculated. \replace{The pole closest to the imaginary axis ($p_4$) without any imaginary part is the slow cart settling, while the complex pole pair decides the faster pendulum balancing.}{The real pole closest to the imaginary axis ($p_4$) dictates the slower settling behavior of the cart, while the complex pole pair determines the faster dynamics of the pendulum balancing.} The last pole ($p_1$) is much further from the imaginary axis which means it has very little impact on the performance of the system.
+Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles are calculated. \replace{The pole closest to the imaginary axis ($p_4$) without any imaginary part is the slow cart settling, while the complex pole pair decides the faster pendulum balancing.}{The real pole closest to the imaginary axis ($p_4$) dictates the slower settling behavior of the cart, while the complex pole pair determines the faster dynamics of the pendulum balancing.} The last pole ($p_1$) is much further from the imaginary axis, which means it has very little impact on the performance of the system.
 
 First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to determine the damping ratio ($\zeta$) and natural frequency ($\omega_n$):
 \begin{equation}
@@ -63,21 +63,21 @@ First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to deter
 \end{equation}
 Because $\zeta \approx 1$, the inner pendulum is nearly critically damped. Which means there is close to no overshoot ($M_p \approx 0$).
 
-Next, the Rise Time ($t_r$, 10\% to 90\%) is estimated using a second-order approximation on the pole pair representing the pendulums swinging:
+Next, the Rise Time ($t_r$, 10\% to 90\%) is estimated using a second-order approximation on the pole pair representing the pendulum's swinging:
 \begin{equation}
 	t_r \approx \frac{1.8}{\omega_n} = \frac{1.8}{6.02} \approx 0.30 \text{ seconds}
 \end{equation}
 
-Lastly, the Settling Time ($t_s$, $\alpha = 2\%$) is estimated with another second-order approximation this time on the dominant pole ($p_4$) representing the the cart settling. Since the pendulum being upright is dependant on the cart settling.
+\comment{Lastly, the Settling Time ($t_s$, $\alpha = 2\%$) is estimated with another second-order approximation, this time on the dominant pole ($p_4$) representing the cart settling. Since the pendulum being upright is dependant on the cart settling.}{Switch sentence order: reasoning, then method}
 \begin{equation}
 	t_s \approx \frac{-\ln(\alpha)}{\sigma_{p_4}} = \frac{3.912}{1.95} \approx 2.01 \text{ seconds}
 \end{equation}
 
-\section{LQI controller}
-While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodeled dynamics or constant disturbances in the system, such as friction in the belt which the cart sits on, inclinations in the setup or other forces affecting the cart or pendulum.
+\section{LQI Controller}
+While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodelled dynamics or constant disturbances in the system. This could be friction in the belt which the cart sits on, inclinations in the setup or other forces affecting the cart or pendulum.
 
 \subsection{Augmenting the State Vector}
-To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the "I" term in a PID controller.\newline
+To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the integral term in a PID controller.\newline
 
 This new integral state is defined as:
 \begin{equation}
@@ -88,27 +88,27 @@ This new integral state is defined as:
 Where $\tau$ is the current moment in time. The standard state vector is then augmented from four variables to five:
 \begin{equation}
 	\label{LQI augmented state}
-	\textbf{X}_{aug} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
+	\textbf{X} = \left[ x, \dot{x}, \theta, \dot{\theta}, x_i \right]^T
 \end{equation}
 
 \subsection{The Augmented Control Law}
-To implement LQI, the discrete system matrices and the weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
+To implement LQI, the discrete system matrices and \remove{the }weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
 
 Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
-	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
+	u = -\textbf{K} \textbf{X} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
 \end{equation}
 
-Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it guarantees that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
+Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it ensures that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
 
-\subsection{Poles \& Performance For LQI}
+\subsection{Poles \& Performance for LQI}
 Adding the integral state introduces a fifth pole to the closed-loop system. The calculated poles for the augmented controller is:
 \begin{equation}
 	p_1 = -43.97, \quad p_2 = -6.37, \quad p_3 = -5.73, \quad p_4 = -1.90, \quad p_5 = -0.52
 \end{equation}
 
-Like the LQR, all poles have negative real parts, meaning the system is stable. Also, all five poles have no imaginary part, this indicates that the theoretical response is only overdamped, ensuring no overshoot  ($M_p = 0$). In the LQR controller, the pendulum movements were decided by the complex pole pair at $-5.98 \pm 0.68i$ and the Rise Time ($t_r$) was found from the natural frequency ($\omega_n$) this results in. Instead, In the LQI controller, this pair splits into two real poles without an imaginary part:
+Like the LQR, all poles have negative real parts, meaning the system is stable. Also, all five poles have no imaginary part, this indicates that the theoretical response can only be overdamped, ensuring no overshoot  ($M_p = 0$). In the LQR controller, the pendulum movements were decided by the complex pole pair at $-5.98 \pm 0.68i$, and the Rise Time ($t_r$) was found from the natural frequency ($\omega_n$) this results in. Instead, in the LQI controller, this pair splits into two real poles without an imaginary part:
 \begin{equation}
 	p_2 = -6.37, \quad p_3 = -5.73
 \end{equation}
@@ -124,15 +124,15 @@ The speed of the pendulum balancing is limited by the slower of these two poles 
 	t_r = t_{0.9} - t_{0.1} \approx 0.384 \text{ seconds}
 \end{equation}
 
-Next, to find the Settling Time, the speed of which the cart settles must be found. However, the new integral pole ($p_5$) is now the dominant pole of the system, but since the cart pole ($p_4$) is what affects the system for most of the time this will be what best estimates the Settling Time ($t_s$). Calculating it based on this gives:
+Next, to find the Settling Time, the speed at which the cart settles must be found. However, the new integral pole ($p_5$) is now the dominant pole of the system, but since the cart pole ($p_4$) is what affects the system for most of the time this will be what best estimates the Settling Time ($t_s$). Calculating it based on this gives:
 \begin{equation}
 	t_s \approx \frac{-\log(0.02)}{\sigma_{p_4}} \approx 2.06 \text{ seconds}
 \end{equation}
 
-\section{Cascaded PID controller}
-While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart together with the transfer function derived in (reference to system modelling here!).
+\section{Cascaded PID Controller}
+While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart \remove{together with the transfer function derived in (reference to system modelling here!)}.
 
-\subsection{Cascade setup}
+\subsection{Cascade Setup}
 The control system is divided into two nested feedback loops:
 \begin{itemize}
 	\item \textbf{Inner Loop (Pendulum):} This loop focuses entirely on stabilizing the pendulum angle ($\theta$). It uses a PD controller. The integral term is not used here, as it can introduce phase lag and worsen the stability of the highly unstable system of the inverted pendulum. The derivative term provides the critical damping required to catch and balance the pendulum.
@@ -141,7 +141,7 @@ The control system is divided into two nested feedback loops:
 For this cascade to function, the inner angle loop must be tuned to react significantly faster than the outer position loop, preventing the two controllers from fighting each other.
 
 \subsection{Tuning via Root Locus}
-The method used for tuning this setup is the Root Locus technique, which visualizes the paths of the closed-loop poles as a control gain is varied.\newline
+A method for tuning this type of setup is the Root Locus technique, which visualizes the paths of the closed-loop poles as a control gain is varied.\newline
 
 The transfer function for the inner PD controller is:
 \begin{equation}
@@ -164,7 +164,7 @@ First, the cart's position error ($e_x$) is calculated by subtracting its curren
 	e_x = x_{ref} - x
 \end{equation}
 
-It is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
+The error is multiplied by the proportional gain ($K_{p,x}$), its accumulated sum over time is multiplied by the integral gain ($K_{i,x}$), and its rate of change is multiplied by the derivative gain ($K_{d,x}$). The sum of these three terms does not output a motor force. Instead, it gives a reference angle ($\theta_{ref}$), which is the amount the pendulum needs to lean to move the cart toward its target position:
 \begin{equation}
 	\label{Cart PID}
 	\theta_{ref} = K_{p,x} e_x + K_{i,x} \int_{0}^{\tau} e_x dt + K_{d,x} \frac{d e_x}{dt}
@@ -182,7 +182,7 @@ The angular error is then multiplied by the proportional gain ($K_{p,\theta}$), 
 	u = K_{p,\theta} e_\theta + K_{d,\theta} \frac{d e_\theta}{dt}
 \end{equation}
 
-\subsection{Poles \& Performance For Cascade}
+\subsection{Poles \& Performance for Cascade}
 Analyzing the closed-loop poles of the cascaded PID-PD structure shows significant theoretical stability issues. The calculated poles are:
 \begin{equation}
 	p_1 = 1.0853, \quad p_2 = 0.0751, \quad p_3 = -0.1163, \quad p_4 = -0.0743
