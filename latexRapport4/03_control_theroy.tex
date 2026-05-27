@@ -61,14 +61,16 @@ First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to deter
 \begin{equation}
 	\zeta = \frac{\sigma}{\omega_n} = \frac{5.98}{6.02} \approx 0.993
 \end{equation}
-Because $\zeta \approx 1$, the inner pendulum is nearly critically damped. Which means there is close to no overshoot.
+Because $\zeta \approx 1$, the inner pendulum is nearly critically damped. Which means there is close to no overshoot ($M_p \approx 0$).
 
-Next, the Rise Time ($T_r$, 10\% to 90\%) and Settling Time ($T_s$, 2\% band) is estimated using first-order approximations for the dominant pole ($p_4$):
+Next, the Rise Time ($t_r$, 10\% to 90\%) is estimated using a second-order approximation on the pole pair representing the pendulums swinging:
 \begin{equation}
-	T_r \approx \frac{2.2}{|\sigma_{p_4}|} = \frac{2.2}{1.95} \approx 1.13 \text{ seconds}
+	t_r \approx \frac{1.8}{\omega_n} = \frac{1.8}{6.02} \approx 0.30 \text{ seconds}
 \end{equation}
+
+Lastly, the Settling Time ($t_s$, $\alpha = 2\%$) is estimated with another second-order approximation this time on the dominant pole ($p_4$) representing the the cart settling. Since the pendulum being upright is dependant on the cart settling.
 \begin{equation}
-	T_s \approx \frac{4}{|\sigma_{p_4}|} = \frac{4}{1.95} \approx 2.05 \text{ seconds}
+	t_s \approx \frac{-\ln(\alpha)}{\sigma_{p_4}} = \frac{3.912}{1.95} \approx 2.01 \text{ seconds}
 \end{equation}
 
 \section{LQI controller}
@@ -106,14 +108,25 @@ Adding the integral state introduces a fifth pole to the closed-loop system. The
 	p_1 = -43.97, \quad p_2 = -6.37, \quad p_3 = -5.73, \quad p_4 = -1.90, \quad p_5 = -0.52
 \end{equation}
 
-Like the LQR, all poles have negative real parts, meaning the system is stable. Also, all five poles have no imaginary part, this indicates that the theoretical response is only overdamped, ensuring no overshoot.
-
-The new integral pole ($p_5$) is now the dominant pole of the system. Calculating the performance based on this new dominant pole gives:
+Like the LQR, all poles have negative real parts, meaning the system is stable. Also, all five poles have no imaginary part, this indicates that the theoretical response is only overdamped, ensuring no overshoot  ($M_p = 0$). In the LQR controller, the pendulum movements were decided by the complex pole pair at $-5.98 \pm 0.68i$ and the Rise Time ($t_r$) was found from the natural frequency ($\omega_n$) this results in. Instead, In the LQI controller, this pair splits into two real poles without an imaginary part:
 \begin{equation}
-	T_r \approx \frac{2.2}{|\sigma_{p_5}|} = \frac{2.2}{0.52} \approx 4.23 \text{ seconds}
+	p_2 = -6.37, \quad p_3 = -5.73
+\end{equation}
+
+The speed of the pendulum balancing is limited by the slower of these two poles ($p_3 = -5.73$). By applying the first-order rise time definition (the time to travel from $10\%$ to $90\%$ of the reference) to this specific local dominant pole ($\sigma_{p_3} = 5.73$), the pendulum's theoretical rise time can now be estimated:
+\begin{equation}
+	t_{0.1} = \frac{-\ln(0.90)}{\sigma_{p_3}} \approx 0.018 \text{ seconds}
 \end{equation}
 \begin{equation}
-	T_s \approx \frac{4}{|\sigma_{p_5}|} = \frac{4}{0.52} \approx 7.69 \text{ seconds}
+	t_{0.9} = \frac{-\ln(0.10)}{\sigma_{p_3}} \approx 0.402 \text{ seconds}
+\end{equation}
+\begin{equation}
+	t_r = t_{0.9} - t_{0.1} \approx 0.384 \text{ seconds}
+\end{equation}
+
+Next, to find the Settling Time, the speed of which the cart settles must be found. However, the new integral pole ($p_5$) is now the dominant pole of the system, but since the cart pole ($p_4$) is what affects the system for most of the time this will be what best estimates the Settling Time ($t_s$). Calculating it based on this gives:
+\begin{equation}
+	t_s \approx \frac{-\log(0.02)}{\sigma_{p_4}} \approx 2.06 \text{ seconds}
 \end{equation}
 
 \section{Cascaded PID controller}
@@ -178,7 +191,7 @@ $$
 	p_5 = -0.0643, \quad p_{6,7} = 0.0031 \pm 0.0215i, \quad p_8 = -0.0089
 $$
 
-Performance metrics such as Rise Time, Settling Time, and Overshoot are only defined for stable systems. Because this system possesses multiple poles with positive real parts ($p_1, p_2,$ and the $p_{6,7}$ pole pair), the model of the system is considered unstable. However, it must be stated that the controller does not exhibit this behaviour on the actual setup.
+Performance metrics such as Rise Time, Settling Time, and Overshoot are only defined for stable systems. Because this system possesses multiple poles with positive real parts ($p_1$, $p_2$, and the $p_{6,7}$ pole pair), the model of the system is considered unstable. However, it must be stated that the controller does not exhibit this behaviour on the actual setup.
 
 \section{Swing up}
 Something that is not nescessary for balancing the pendulum itself is swing up, instead the purpose of this is to get the pendulum from hanging downward to within a specific range of the upward position where a controller can catch it. This makes the testing process of the different controllers much easier and the overall implementation and use of the system simpler.
