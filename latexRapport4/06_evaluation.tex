@@ -1,17 +1,17 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-\subsection{Preface}
+\section{Preface}
 
 To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to get a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in REF[] but graphs of the representative data can be seen here. 
 
-For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. \replace{Because 0 is in the center of the track, the graphs will always be centered around that, as all units are in the treated units and not in raw encoder units.}{For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track.} The pendulum angle shows what the angle of the entire pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the carts center. The motor force test is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in REF[]. 
+For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track. The pendulum angle shows what the angle of the entire pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the carts center. The motor force test is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in REF[]. 
 
 All tests are colour-coded, and the simulation tests from SIMULINK are the same colour as the physical test, but a dotted.
 
-\subsection{Impulse test}
+\section{Impulse test}
 
-The impulse test was done by applying a single \comment{impulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, \remove{would mean that} the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
+The impulse test was done by applying a single \comment{impulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
 
 \begin{figure}[H]
     \centering
@@ -20,7 +20,7 @@ The impulse test was done by applying a single \comment{impulse of 6 newtons, fo
 	\label{fig:impulse_cart_pos}   
 \end{figure}
 
-The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. \comment{As the graph shows, all 3 controllers are at a different point in either steady or swinging one or the other way.}{hvaba} Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
+The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
 
 \begin{figure}[H]
     \centering
@@ -29,7 +29,7 @@ The impulse acts differntly for all 3 controllers specificly because of the syst
 	\label{fig:impulse_pend_angle}   
 \end{figure}
 
-Even though the cart position varies by a bit between all 3 controllers, the angle itself is almost the exact same, giving a very similar starting condition angle wise for the impulse. A sharp peak that quickly mellows out as the controller catches the the pendulum and balances again.
+The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they have this starting position, when the impulse hits, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
 
 \begin{figure}[H]
     \centering
@@ -41,7 +41,7 @@ Even though the cart position varies by a bit between all 3 controllers, the ang
 The motor force is very similar for all 3 controllers. It is very steady in the beginning, but with a slight offset. When the impulse hits, the force swings until it settles back down to a similar point as the starting level.
 
 
-\subsection{Step response test}
+\section{Step response test}
 
 The step test was done similarly to the impulse, but instead it was applied for 10 seconds rather than 50 milliseconds, and with 8 newtons of force. This allows certain controllers to show off their resilience under continued pressure.
 
@@ -52,7 +52,7 @@ The step test was done similarly to the impulse, but instead it was applied for 
 	\label{fig:Step_cart_pos}   
 \end{figure}
 
-The cart position in the step test shows the LQR controller moving to one side for the entire duration of the step. However both the LQI and PID controllers go to the side, but gravitate back towards the center, until the step is over, where it jerks to the opposite side, then settles back to the middle again.
+The cart position in the step test shows the LQR controller moving to one side for the entire duration of the step. However both the LQI and PID controllers go to the side, then gravitate back towards the center, until the step is over, where it jerks to the opposite side, then settles back to the middle again.
 
 \begin{figure}[H]
     \centering
@@ -72,7 +72,7 @@ The pendulum has a very similar, yet opposite movement to the cart itself. At th
 
 The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Do notice that this graph only shows 3.5 seconds, but look the same at the end of the step. This can be seen in the data in REF[]
 
-\subsection{Swing up test}
+\section{Swing up test}
 
 Finally the swing up test, which was done by initiating the swing up, and switching to the controller when possible. This shows how quickly and well the controller can activate, stabilizing an unstable pendulum, and catching it when it reaches the top with a velocity that would allow the given controller to catch it. One thing to note is that the graphs only show the time after the controller kicked in, and not during the swingup itself.
 
@@ -83,6 +83,8 @@ Finally the swing up test, which was done by initiating the swing up, and switch
 	\label{fig:Swing_cart_pos}   
 \end{figure}
 
+Because the controller kicks in just at the top of a swing, all 3 controllers react similarly, with a larger movement, to first stop the pendulum from over swinging, before they try to balance it.
+
 \begin{figure}[H]
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Swing_pend_angle.png}
@@ -90,9 +92,12 @@ Finally the swing up test, which was done by initiating the swing up, and switch
 	\label{fig:Swing_pend_angle}   
 \end{figure}
 
+The angle of the swing up react in the opposite direction of the cart position, as the cart is moved quickly to get ahead of the pendulum. This is shown in the graph as a sharp decline in the angle, before it evens out near the correct angle. Do note that the graphs time is much shorter, but with more intermediate steps, than the position was, as to show the intricacies of the angle, that cannot be seen by looking at a longer period of time.
+
 \begin{figure}[H]
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Swing_motor_u.png}
 	\caption{Motor force during the swing up test.}
 	\label{fig:Swing_motor_u}   
 \end{figure}
+
