@@ -1,17 +1,15 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-\section{Preface}
+To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to ensure a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in \alert{REF[]}, but graphs of the representative data can be seen here. 
 
-To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to get a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in REF[] but graphs of the representative data can be seen here. 
+For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track. The pendulum angle shows what the angle of the pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the cart's center. The motor force parameter is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in \alert{REF[]}. 
 
-For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track. The pendulum angle shows what the angle of the entire pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the carts center. The motor force test is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in REF[]. 
+All tests are colour-coded, such that the controllers use separate colors, with the physical data shown in a full line, while the simulation uses a dotted.
 
-All tests are colour-coded, and the simulation tests from SIMULINK are the same colour as the physical test, but a dotted.
+\section{Impulse Test}
 
-\section{Impulse test}
-
-The impulse test was done by applying a single \comment{impulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
+The impulse test was done by applying a single \comment{pulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
 
 \begin{figure}[H]
     \centering
@@ -20,7 +18,7 @@ The impulse test was done by applying a single \comment{impulse of 6 newtons, fo
 	\label{fig:impulse_cart_pos}   
 \end{figure}
 
-The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
+The impulse affects the 3 controllers differently, likely because of the difference in system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they all move to a different spot, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
 
 \begin{figure}[H]
     \centering
@@ -29,7 +27,7 @@ The impulse acts differntly for all 3 controllers specificly because of the syst
 	\label{fig:impulse_pend_angle}   
 \end{figure}
 
-The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they have this starting position, when the impulse hits, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
+The 3 controllers start by balancing the pendulum very close to 0, the fully upright position. When the impulse hits, they all swing wide one way, before compensating the other way, creating a small oscillation before a steady balance is reached again.
 
 \begin{figure}[H] 
     \centering
@@ -41,7 +39,7 @@ The impulse acts differntly for all 3 controllers specificly because of the syst
 The motor force is very similar for all 3 controllers. It is very steady in the beginning, but with a slight offset. When the impulse hits, the force swings until it settles back down to a similar point as the starting level.
 
 
-\section{Step response test}
+\section{Step Response Test}
 
 The step test was done similarly to the impulse, but instead it was applied for 10 seconds rather than 50 milliseconds, and with 8 newtons of force. This allows certain controllers to show off their resilience under continued pressure.
 
@@ -70,11 +68,11 @@ The pendulum has a very similar, yet opposite movement to the cart itself. At th
 	\label{fig:Step_motor_u}   
 \end{figure}
 
-The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Do notice that this graph only shows 3.5 seconds, but look the same at the end of the step. This can be seen in the data in REF[]
+The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Note that this graph only shows 3.5 seconds, but look similar at the end of the step. This can be seen in the data in \alert{REF[]}.
 
-\section{Swing up test}
+\section{Swing Up Test}
 
-Finally the swing up test, which was done by initiating the swing up, and switching to the controller when possible. This shows how quickly and well the controller can activate, stabilizing an unstable pendulum, and catching it when it reaches the top with a velocity that would allow the given controller to catch it. One thing to note is that the graphs only show the time after the controller kicked in, and not during the swingup itself.
+Finally the swing up test, which was done by initiating the swing up, and switching to the controller when possible. This shows how quickly and well the controller can compensate, stabilizing an unstable pendulum. This is essentially an initial condition test, with a moving pendulum. One thing to note is that the graphs only show the time after the controller kicked in, and not during the swing up itself.
 
 \begin{figure}[H]
     \centering
@@ -83,7 +81,7 @@ Finally the swing up test, which was done by initiating the swing up, and switch
 	\label{fig:Swing_cart_pos}   
 \end{figure}
 
-Because the controller kicks in just at the top of a swing, all 3 controllers react similarly, with a larger movement, to first stop the pendulum from over swinging, before they try to balance it.
+Because the controller kicks in just at the top of a swing with the angle being substantially off from the reference, all 3 controllers react similarly, with a larger movement to recover before settling.
 
 \begin{figure}[H]
     \centering
@@ -92,7 +90,7 @@ Because the controller kicks in just at the top of a swing, all 3 controllers re
 	\label{fig:Swing_pend_angle}   
 \end{figure}
 
-The angle of the swing up react in the opposite direction of the cart position, as the cart is moved quickly to get ahead of the pendulum. This is shown in the graph as a sharp decline in the angle, before it evens out near the correct angle. Do note that the graphs time is much shorter, but with more intermediate steps, than the position was, as to show the intricacies of the angle, that cannot be seen by looking at a longer period of time.
+The angle of the swing up reacts in the opposite direction of the cart position, as the cart is moved quickly to get ahead of the pendulum. This is shown in the graph as a sharp decline in the angle, before it evens out near the correct angle. Note that the graphs time is much shorter, with more detail, as to show the intricacies of the angle, that cannot easily be seen by looking at a longer period of time.
 
 \begin{figure}[H]
     \centering
