@@ -25,7 +25,7 @@ Where:
 \end{itemize}
 
 \subsection{Tuning with Bryson's Rule}
-Deciding what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way, Bryson's Rule is applied. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
+Bryson's Rule is applied here to decide what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
 
 The maximum limits defined for this system are:
 \begin{itemize}
@@ -39,7 +39,7 @@ The maximum limits defined for this system are:
 Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with these weight matrices ($\textbf{Q}$ and $\textbf{R}$) and the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) gives the optimal feedback gain vector $\textbf{K}$. In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain matrix by the current sensor states:
+Solving the algebraic Riccati equation with these weight matrices ($\textbf{Q}$ and $\textbf{R}$) and the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) gives the optimal feedback gain vector ($\textbf{K}$). In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain vector ($\textbf{K}$) by the current sensor states ($\textbf{X}$):
 
 \begin{equation}
 	\label{LQR control law}
@@ -56,7 +56,7 @@ Because all poles have negative real parts, the system is considered stable. To 
 
 First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to determine the damping ratio ($\zeta$) and natural frequency ($\omega_n$):
 \begin{equation}
-	\omega_n = \sqrt{\sigma^2 + \omega_d^2} = \sqrt{(-5.98)^2 + (0.68)^2} \approx 6.02 \text{ rad/s}
+	\omega_n = \sqrt{\sigma^2 + \omega_d^2} = \sqrt{5.98^2 + 0.68^2} \approx 6.02 \text{ rad/s}
 \end{equation}
 \begin{equation}
 	\zeta = \frac{\sigma}{\omega_n} = \frac{5.98}{6.02} \approx 0.993
@@ -92,7 +92,7 @@ Where $\tau$ is the current moment in time. The standard state vector is then au
 \subsection{The Augmented Control Law}
 To implement LQI, the discrete system matrices and the weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
 
-Solving the algebraic Riccati equation again for this augmented system together with a max parameter for the integral value gives the new gain vector, and the resulting control law becomes:
+Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
 	\label{LQI control law}
 	u = -\textbf{K}_{aug} \textbf{X}_{aug} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta} + K_5 x_i)
@@ -142,7 +142,7 @@ Once the inner loop is closed and verified to meet the goals, the outer loop is 
 	\label{PID controller}
 	C_{PID}(s) = K_{p,x} + \frac{K_{i,x}}{s} + K_{d,x} s = \frac{K_{d,x} s^2 + K_{p,x} s + K_{i,x}}{s}
 \end{equation}
-The PID controller introduces one pole at the origin (from the integrator) and two zeros. Using Root Locus on the new combined system, these zeros are placed to change the trajectory of the cart's poles. The goal here is to target ensure the cart moves slowly so that the pendulum is not destabilzed by aggressive changes to the pendulum angle ($\theta_{ref}$).
+The PID controller introduces one pole at the origin (from the integrator) and two zeros. Using Root Locus on the new combined system, these zeros are placed to change the trajectory of the cart's poles. The goal here is to ensure the cart moves slowly so that the pendulum is not destabilzed by aggressive changes to the pendulum angle ($\theta_{ref}$).
 
 \subsection{Cascade Control Law}
 First, the cart's position error ($e_x$) is calculated by subtracting its current measured position ($x$) from the target position ($x_{ref}$):
@@ -174,9 +174,9 @@ Analyzing the closed-loop poles of the cascaded PID-PD structure shows significa
 \begin{equation}
 	p_1 = 1.0853, \quad p_2 = 0.0751, \quad p_3 = -0.1163, \quad p_4 = -0.0743
 \end{equation}
-\begin{equation}
+$$
 	p_5 = -0.0643, \quad p_{6,7} = 0.0031 \pm 0.0215i, \quad p_8 = -0.0089
-\end{equation}
+$$
 
 Performance metrics such as Rise Time, Settling Time, and Overshoot are only defined for stable systems. Because this system possesses multiple poles with positive real parts ($p_1, p_2,$ and the $p_{6,7}$ pole pair), the model of the system is considered unstable. However, it must be stated that the controller does not exhibit this behaviour on the actual setup.
 
