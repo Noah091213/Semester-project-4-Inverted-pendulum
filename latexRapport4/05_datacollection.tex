@@ -1,2 +1,5 @@
 \chapter{Data Collection}
 \label{chap:datacollection}
+
+\section{Simulation}
+To simulate the controllers, MATLAB and Simulink are used. The MATLAB script is a copy of the PLC implementation of the PID cascade, where the simulation force is inputted into a state-space model instead of the physical setup. It is done this way because, in all attempts to use Simulink, the force went toward infinity. LQR was implemented in Simulink by using a state-space block, where the input is force $u$, and the output is the state, which is used to find $u$ \ref{LQR control law}. The LQI implementation in Simulink is an extension of LQR, where $x$ is sent through an integrator block and the gains are changed.
