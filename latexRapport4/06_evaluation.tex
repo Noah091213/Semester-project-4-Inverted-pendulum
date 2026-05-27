@@ -31,7 +31,7 @@ The impulse acts differntly for all 3 controllers specificly because of the syst
 
 The impulse acts differntly for all 3 controllers specificly because of the system state when the impulse happens. As seen in the graph, all 3 controllers are in a different starting state. The LQR is very steady, while the PID and LQI both oscillate a little. Even though they have this starting position, when the impulse hits, they still all move in a very similar way, with a sharp impulse that evens out to find a steady state again.
 
-\begin{figure}[H]
+\begin{figure}[H] 
     \centering
 	\includegraphics[width=1.0\textwidth]{Figures/Impulse_motor_u.png}
 	\caption{Motor force during the impulse test.}
@@ -101,3 +101,4 @@ The angle of the swing up react in the opposite direction of the cart position, 
 	\label{fig:Swing_motor_u}   
 \end{figure}
 
+ The motor force outputted during the swing up, like with the impulse, looks a bit different depending on how far up the swing got before the controller took over, and at what velocity. In practice this shows up as a different degree of spike during the switch, as the motor had to work less to catch the pendulum.
