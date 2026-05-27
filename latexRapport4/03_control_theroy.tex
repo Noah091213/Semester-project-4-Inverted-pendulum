@@ -1,16 +1,16 @@
 \chapter{Control theory}
 \label{chap:control theory}
-There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt in this setup, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
+There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt\remove{ in this setup}, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
 
 \section{LQR controller}
 One way to stabilize the inverted pendulum in its upward position, is a Linear Quadratic Regulator (LQR). LQR is an "optimal" multivariable controller that determines the best possible feedback gains by balancing the trade off between keeping the system states close to zero and minimizing the control effort used to do so.
 
 \subsection{Discretization for PLC}
-Because the controller will be running on a B\&R Programmable Logic Controller (PLC) running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
-The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ from REFERENCE INSERT HERE) are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the sampling of the PLC.
+Because the controller will be running on a \comment{B\&R Programmable Logic Controller (PLC)}{should be clear from the system overview} running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
+The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ from \alert{REFERENCE INSERT HERE}) are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the sampling of the PLC.
 
 \subsection{The Cost Function and Weighting Matrices}
-The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function:
+The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function ($J$):
 
 \begin{equation}
 	J = \sum_{k=0}^{\infty} \left( \textbf{X}_k^T \textbf{Q} \textbf{X}_k + u_k^T \textbf{R} u_k \right)
@@ -19,7 +19,7 @@ The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by min
 Where:
 \begin{itemize}
 	\item $\textbf{X}_k$ is the state vector at time step $k$, defined as $\textbf{X} = [x, \dot{x}, \theta, \dot{\theta}]^T$.
-	\item $u_k$ is the control input (motor force).
+	\item $u_k$ is the control effort (motor force).
 	\item $\textbf{Q}$ is a matrix that penalizes deviations in the system states (position and velocity errors).
 	\item $\textbf{R}$ is a matrix that penalizes the use of the actuator (control effort).
 \end{itemize}
@@ -39,7 +39,7 @@ The maximum limits defined for this system are:
 Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with these weight matrices ($\textbf{Q}$ and $\textbf{R}$) and the discrete system matrices ($\textbf{A}$ and $\textbf{B}$) gives the optimal feedback gain vector ($\textbf{K}$). In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain vector ($\textbf{K}$) by the current sensor states ($\textbf{X}$):
+Solving the algebraic Riccati equation with the\remove{se} weight matrices ($\textbf{Q}$ and $\textbf{R}$) and \remove{the} discrete system matrices ($\textbf{A}$ and $\textbf{B}$), gives the optimal feedback gain vector ($\textbf{K}$). In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain vector ($\textbf{K}$) by the current sensor states ($\textbf{X}$):
 
 \begin{equation}
 	\label{LQR control law}
@@ -47,12 +47,12 @@ Solving the algebraic Riccati equation with these weight matrices ($\textbf{Q}$ 
 \end{equation}
 
 \subsection{Poles \& Performance For LQR}
-Evaluating the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
+\replace{Evaluating}{To evaluate} the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
 \begin{equation}
 	p_1 = -44.45, \quad p_{2,3} = -5.98 \pm 0.68i, \quad p_4 = -1.95
 \end{equation}
 
-Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles is calculated. The pole closest to the imaginary axis ($p_4$) without any imaginary part is the slow cart settling, while the complex pole pair decides the faster pendulum balancing. The last pole ($p_1$) is much further from the imaginary axis which means it has very little impact on the performance of the system.
+Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles are calculated. \replace{The pole closest to the imaginary axis ($p_4$) without any imaginary part is the slow cart settling, while the complex pole pair decides the faster pendulum balancing.}{The real pole closest to the imaginary axis ($p_4$) dictates the slower settling behavior of the cart, while the complex pole pair determines the faster dynamics of the pendulum balancing.} The last pole ($p_1$) is much further from the imaginary axis which means it has very little impact on the performance of the system.
 
 First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to determine the damping ratio ($\zeta$) and natural frequency ($\omega_n$):
 \begin{equation}
