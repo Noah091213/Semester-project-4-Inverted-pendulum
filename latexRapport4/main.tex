@@ -95,9 +95,16 @@ showframe=false
 	
 	\input{00_abstract.tex}
 	
-	\tableofcontents
-	
 	\clearpage
+	\begingroup
+	\enlargethispage{2\baselineskip} % Gains about 2 lines by extending the bottom margin slightly
+	\renewcommand{\baselinestretch}{0.95} % Gently squishes the line spacing by just 5%
+	\selectfont
+	\tableofcontents
+	\clearpage
+	\endgroup
+	
+	
 	\pagenumbering{arabic}
 	
 	% Main Body (Chapters)
