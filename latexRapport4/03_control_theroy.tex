@@ -193,7 +193,7 @@ $$
 Performance metrics such as Rise Time, Settling Time, and Overshoot are only defined for stable systems. Because this system possesses multiple poles with positive real parts ($p_1$, $p_2$, and the $p_{6,7}$ pole pair), the model of the system is considered unstable. However, it must be stated that the controller does not exhibit this behaviour on the actual setup.
 
 \section{Swing up}
-Something that is not nescessary for balancing the pendulum itself is swing up, instead the purpose of this is to get the pendulum from hanging downward to within a specific range of the upward position where a controller can catch it. This makes the testing process of the different controllers much easier and the overall implementation and use of the system simpler.
+Something that is not necessary for balancing the pendulum itself is swing up, instead the purpose of this is to get the pendulum from hanging downward to within a specific range of the upward position where a controller can catch it. This makes the testing process of the different controllers much easier and the overall implementation and use of the system simpler.
 
 \subsection{The Energy Controller}
 To achieve the swing up, the system uses an energy based controller. This injects kinetic energy into the pendulum until its total mechanical energy equals the potential energy required to stand upright.
