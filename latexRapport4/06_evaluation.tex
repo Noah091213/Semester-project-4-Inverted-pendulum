@@ -1,15 +1,15 @@
 \chapter{Evaluation}
 \label{chap:evaluation}
 
-To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to ensure a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in \alert{REF[]}, but graphs of the representative data can be seen here. 
+To evaluate the different controllers, multiple tests showing off their individual strengths and weaknesses were done. All of the controllers were tested multiple times to ensure a good sample size, the data was treated and cleaned, and then a set of data deemed to be the most representative was chosen for each controller and for each test. All the data can be found in appendix \ref{chap:code}, but graphs of the representative data can be seen here. 
 
-For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track. The pendulum angle shows what the angle of the pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the cart's center. The motor force parameter is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in \alert{REF[]}. 
+For each test, 3 graphs were made. The cart position shows how the cart reacts and moves during the various stages of tests. For the cart position graphs, the calculated $x$ position in meters is used, with 0 at the center of the track. The pendulum angle shows what the angle of the pendulum is during the tests. This is shown in degrees measured by the encoder sitting at the base of the pendulum in the cart's center. The motor force parameter is a readout of the force applied by the motor. It is measured in newtons, as the motor drive has a mode specifically for torque, as mentioned in chapter \ref{chap:plc implementation}. 
 
 All tests are colour-coded, such that the controllers use separate colors, with the physical data shown in a full line, while the simulation uses a dotted.
 
 \section{Impulse Test}
 
-The impulse test was done by applying a single \comment{pulse of 6 newtons, for 50 milliseconds,}{remember to comment that an impulse technically is and why we use this instead} to the output of the controller. This means that at an output of 1 newton, the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
+The impulse test was done by applying a single pulse of 6 newtons, for 50 milliseconds, to the output of the controller. This means that at an output of 1 newton, the cart would be affected by 7 newtons for 50 milliseconds. It is primarily used to show how the various controllers recover from one off pushes.
 
 \begin{figure}[H]
     \centering
@@ -68,7 +68,7 @@ The pendulum has a very similar, yet opposite movement to the cart itself. At th
 	\label{fig:Step_motor_u}   
 \end{figure}
 
-The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Note that this graph only shows 3.5 seconds, but look similar at the end of the step. This can be seen in the data in \alert{REF[]}.
+The motor force during the step looks very similar for all 3 controllers. Both the LQI and PID have a different starting force, and go back to that same force after the step. Note that this graph only shows 3.5 seconds, but look similar at the end of the step. This can be seen in the data in appendix \ref{chap:code}.
 
 \section{Swing Up Test}
 
@@ -107,17 +107,17 @@ The angle of the swing up reacts in the opposite direction of the cart position,
  
 \subsection{LQI}
 
-The LQI controllers initial angle is $0.4663$ rad which forms the baseline for the performance metric calculations. To estimate the Settling Time the last time step where the angle is outside of 2\% of the initial angle ($0.4663 \cdot 0.02 = 0.0093$ rad) must be found. This happens 1.49 seconds after the initial position. Thus: 
+The LQI controllers initial angle is $0.4663$ rad which forms the baseline for the performance metric calculations. To estimate the Settling Time ($t_s$) the last time step where the angle is outside of 2\% of the initial angle ($0.4663 \cdot 0.02 = 0.0093$ rad) must be found. This happens 1.49 seconds after the initial position. Thus: 
 \begin{align}
 	t_s \approx 1.49 s
 \end{align}
 
-The Rise Time is found by identifying the time steps where the pendulum reaches 90\% ($0.4197$ rad) and 10\% ($0.0466$ rad) of the initial position, this happens after 0.02 and 0.2 seconds respectively. Thus:
+The Rise Time ($t_r$) is found by identifying the time steps where the pendulum reaches 90\% ($0.4197$ rad) and 10\% ($0.0466$ rad) of the initial position, this happens after 0.02 and 0.2 seconds respectively. Thus:
  \begin{align}
  	t_r \approx 0.2 - 0.02 \approx 0.18 s
  \end{align}
 
-The overshoot is found by locating the time step with the highest value with opposite sign to the initial value. This is found to be $-0.1058$ rad. Thus:
+The Overshoot ($M_p$) is found by locating the time step with the highest value with opposite sign to the initial value. This is found to be $-0.1058$ rad. Thus:
 \begin{align}
 	M_p \approx \frac{0.1058}{0.4663} \approx 22.7 \%
 \end{align}

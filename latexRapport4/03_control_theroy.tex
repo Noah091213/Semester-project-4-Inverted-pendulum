@@ -11,7 +11,6 @@ The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ 
 
 \subsection{The Cost Function and Weighting Matrices}
 The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function ($J$):
-
 \begin{equation}
 	J = \sum_{k=0}^{\infty} \left( \textbf{X}_k^T \textbf{Q} \textbf{X}_k + u_k^T \textbf{R} u_k \right)
 \end{equation}
@@ -25,7 +24,7 @@ Where:
 \end{itemize}
 
 \subsection{Tuning with Bryson's Rule}
-Bryson's Rule is applied here to decide what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.\newline
+Bryson's Rule is applied here to decide what to put in the $\textbf{Q}$ and $\textbf{R}$ matrices in an intuitive way. This method scales each parameter based on its maximum acceptable physical limit, ensuring every variable contributes evenly to the cost function.
 
 The maximum limits defined for this system are:
 \begin{itemize}
@@ -77,7 +76,7 @@ Lastly, since the pendulum being upright is dependant on the cart settling. The 
 While standard LQR is very effective at stabilizing the system, it functions purely as a proportional controller. This means it can suffer from steady-state errors if there are unmodelled dynamics or constant disturbances in the system. This could be friction in the belt which the cart sits on, inclinations in the setup or other forces affecting the cart or pendulum.
 
 \subsection{Augmenting the State Vector}
-To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the integral term in a PID controller.\newline
+To eliminate these steady state offsets, the controller can be expanded into a Linear Quadratic Integral (LQI) controller. This is achieved by introducing a new state variable that accumulates the cart position error over time, functioning like the integral term in a PID controller.
 
 This new integral state is defined as:
 \begin{equation}
@@ -92,7 +91,7 @@ Where $\tau$ is the current moment in time. The standard state vector is then au
 \end{equation}
 
 \subsection{The Augmented Control Law}
-To implement LQI, the discrete system matrices and weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
+To implement LQI, the discrete system matrices and weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. 
 
 Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
@@ -141,14 +140,14 @@ The control system is divided into two nested feedback loops:
 For this cascade to function, the inner angle loop must be tuned to react significantly faster than the outer position loop, preventing the two controllers from fighting each other.
 
 \subsection{Tuning via Root Locus}
-A method for tuning this type of setup is the Root Locus technique, which visualizes the paths of the closed-loop poles as a control gain is varied.\newline
+A method for tuning this type of setup is the Root Locus technique, which visualizes the paths of the closed-loop poles as a control gain is varied.
 
 The transfer function for the inner PD controller is:
 \begin{equation}
 	\label{PD controller}
 	C_{PD}(s) = K_{p,\theta} + K_{d,\theta} s
 \end{equation}
-This structure adds a single zero to the open loop system. The inner loop is tuned first by strategically placing this zero on the s-plane to "pull" the unstable open loop poles of the pendulum into the stable left-half plane (LHP), ensuring the system meets the performance requirements.\newline
+This structure adds a single zero to the open loop system. The inner loop is tuned first by strategically placing this zero on the s-plane to "pull" the unstable open loop poles of the pendulum into the stable left-half plane (LHP), ensuring the system meets the performance requirements.
 
 Once the inner loop is closed and verified to meet the goals, the outer loop is tuned. The transfer function for the outer PID controller is:
 \begin{equation}
