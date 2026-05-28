@@ -6,15 +6,15 @@ Control systems play an essential role in modern automation and robotics, where 
 
 One of the most well-known and challenging control problems is the inverted pendulum system. The system is naturally unstable, meaning that even small disturbances can cause the pendulum to fall if no corrective action is applied. Due to its nonlinear and unstable behavior, the inverted pendulum has become a classical benchmark problem within control engineering and is frequently used for research, education, and validation of different control strategies.
 
-The purpose of this project is to model, simulate, and control an inverted pendulum mounted on a conveyor-driven cart system. The project combines several engineering disciplines, including dynamic modelling, simulation, control theory, PLC implementation, and automation systems integration.
+The purpose of this project is to model, simulate, and control an inverted pendulum mounted on a conveyor-driven cart system. The project combines several engineering disciplines, including dynamic modelling, simulation, control theory, hardware implementation, and automation systems integration.
 
 
 
 \section{Project Goals}
 
-Using a PLC-controlled motor, conveyor-driven cart system, inverted pendulum, and different controller designs, the objective of this project is to stabilize the inverted pendulum in its upright position by regulating the force applied by the motor. The performance of each controller is evaluated by comparing the behavior of the physical system with the corresponding simulation model, in addition to comparing the performance parameters between the controllers. The controller with the response most closely matching the simulated behavior and target performance requirements while maintaining stable pendulum balancing is considered the most successful controller implementation.
+Using a conveyor-driven cart system, inverted pendulum, and different controller designs, the objective of this project is to stabilize the inverted pendulum in its upright position by regulating the force applied by the motor. The performance of each controller is evaluated by comparing the behavior of the physical system with the corresponding simulation model, in addition to comparing the performance parameters between the controllers. The controller with the response most closely matching the simulated behavior and target performance requirements while maintaining stable pendulum balancing is considered the most successful controller implementation.
 
-   
+
 \section{Problem Definition}
 
 The main objectives of this project are to investigate and implement different control strategies capable of stabilizing an inverted pendulum mounted on a conveyor-driven cart system. The project focuses on both modelling and practical controller implementation.
@@ -23,7 +23,7 @@ The main objectives of this project are to investigate and implement different c
 	\item Model the dynamic behavior of the inverted pendulum system
 	\item Implement classical and modern control strategies
 	\item Simulate and validate the controllers in MATLAB/Python
-	\item Implement the controllers on a PLC-based physical system
+	\item Implement the controllers on a physical system
 	\item Compare the responses of the different control strategies
 \end{itemize}
 
@@ -38,7 +38,7 @@ The physical setup also introduces uncertainties and non-ideal effects that are 
 
 From a control perspective, the system represents a nonlinear and inherently unstable problem. To simplify the controller design, the system dynamics were linearized around the upright equilibrium position using small-angle approximations. This means that the mathematical model is primarily valid for small pendulum angles close to the vertical operating point. Large disturbances or extreme pendulum angles may therefore result in deviations between the simulated and physical system behavior.
 
-The PLC implementation also introduces computational and communication-related limitations. The controller execution frequency, encoder resolution, and communication delays between the PLC and external software systems affect the responsiveness and stability of the implemented controller. Additionally, communication delays introduced through OPC UA may affect the responsiveness and real-time performance of the implemented control system compared to the ideal simulation environment.
+The hardware implementation also introduces computational and communication-related limitations. The controller execution frequency, encoder resolution, and communication delays between the hardware and external software systems affect the responsiveness and stability of the implemented controller. Additionally, communication delays introduced through OPC UA may affect the responsiveness and real-time performance of the implemented control system compared to the ideal simulation environment.
 
 
 \section{System Overview}
@@ -46,10 +46,9 @@ The PLC implementation also introduces computational and communication-related l
 The physical setup consists of several interacting subsystems, including:
 
 \begin{itemize}
-	\item A conveyor-driven cart system using an AC servomotor
-	\item An inverted pendulum with an attached tip mass
-	\item Encoders used for measuring pendulum angle and cart position
-	\item A PLC-based control system
-	\item Motor drivers and communication interfaces
+	\item A conveyor-driven cart system using a Schneider Electric 6000 rpm AC servomotor \cite{Servomotor}, along with a Lexium 32C Servo Drive \cite{Servo Drive}
+	\item An inverted metal pendulum with a small tip mass, attached at the center of the cart.
+	\item Encoders placed at the pendulum attachment point and on the servomotor.
+	\item A B\&R Programmable Logic Controller (PLC), X20CP1382 \cite{PLC}
 \end{itemize}
 
