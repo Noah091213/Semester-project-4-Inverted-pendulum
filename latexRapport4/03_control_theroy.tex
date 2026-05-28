@@ -7,7 +7,7 @@ One way to stabilize the inverted pendulum in its upward position, is a Linear Q
 
 \subsection{Discretization for PLC}
 Because the controller will be running on a PLC running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
-The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ from \alert{REFERENCE INSERT HERE}) are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the sampling of the PLC.
+The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ from section \ref{Newton Euler Modelling}) are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the sampling of the PLC.
 
 \subsection{The Cost Function and Weighting Matrices}
 The discrete LQR algorithm computes an optimal gain vector ($\textbf{K}$) by minimizing the discrete quadratic cost function ($J$):
