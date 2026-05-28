@@ -1,12 +1,12 @@
-\chapter{Control theory}
+\chapter{Control Theory}
 \label{chap:control theory}
-There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt\remove{ in this setup}, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
+There are many controllers and strategies that can be used to control and stabilize various systems. For an inverted pendulum attached to a cart on a belt, it is important to regulate both the pendulum and cart position since it is preferred that the cart stands still while the pendulum is balanced in its upward position and because the belt is limited in length.
 
 \section{LQR Controller}
 One way to stabilize the inverted pendulum in its upward position, is a Linear Quadratic Regulator (LQR). LQR is an "optimal" multivariable controller that determines the best possible feedback gains by balancing the trade off between keeping the system states close to zero and minimizing the control effort used to do so.
 
 \subsection{Discretization for PLC}
-Because the controller will be running on a \comment{B\&R Programmable Logic Controller (PLC)}{should be clear from the system overview} running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
+Because the controller will be running on a PLC running at a fixed cycle time of $T_s = 0.001$ seconds, the continuous time statespace model cannot be used directly.\newline
 The system matrices ($\textbf{A}$, $\textbf{B}$, $\textbf{C}$, and $\textbf{D}$ from \alert{REFERENCE INSERT HERE}) are first discretized using a Zero-Order Hold (ZOH) method. This converts the physical model into a discrete-time representation that aligns with the sampling of the PLC.
 
 \subsection{The Cost Function and Weighting Matrices}
@@ -39,7 +39,7 @@ The maximum limits defined for this system are:
 Using these limits, the diagonal values of the $\textbf{Q}$ and $\textbf{R}$ matrices are calculated as the inverse square of the maximum acceptable values ($\frac{1}{\text{max}^2}$).
 
 \subsection{The Control Law}
-Solving the algebraic Riccati equation with the\remove{se} weight matrices ($\textbf{Q}$ and $\textbf{R}$) and \remove{the} discrete system matrices ($\textbf{A}$ and $\textbf{B}$), gives the optimal feedback gain vector ($\textbf{K}$). In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain vector ($\textbf{K}$) by the current sensor states ($\textbf{X}$):
+Solving the algebraic Riccati equation with the weight matrices ($\textbf{Q}$ and $\textbf{R}$) and discrete system matrices ($\textbf{A}$ and $\textbf{B}$), gives the optimal feedback gain vector ($\textbf{K}$). In the PLC implementation, the control force applied to the cart is calculated simply by multiplying the static gain vector ($\textbf{K}$) by the current sensor states ($\textbf{X}$):
 
 \begin{equation}
 	\label{LQR control law}
@@ -47,12 +47,12 @@ Solving the algebraic Riccati equation with the\remove{se} weight matrices ($\te
 \end{equation}
 
 \subsection{Poles \& Performance for LQR} \label{Performance LQR}
-\replace{Evaluating}{To evaluate} the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
+To evaluate the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
 \begin{equation}
 	p_1 = -44.45, \quad p_{2,3} = -5.98 \pm 0.68i, \quad p_4 = -1.95
 \end{equation}
 
-Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles are calculated. \replace{The pole closest to the imaginary axis ($p_4$) without any imaginary part is the slow cart settling, while the complex pole pair decides the faster pendulum balancing.}{The real pole closest to the imaginary axis ($p_4$) dictates the slower settling behavior of the cart, while the complex pole pair determines the faster dynamics of the pendulum balancing.} The last pole ($p_1$) is much further from the imaginary axis, which means it has very little impact on the performance of the system.
+Because all poles have negative real parts, the system is considered stable. To get a measurement of performance, the properties of select poles are calculated. The real pole closest to the imaginary axis ($p_4$) dictates the slower settling behavior of the cart, while the complex pole pair determines the faster dynamics of the pendulum balancing. The last pole ($p_1$) is much further from the imaginary axis, which means it has very little impact on the performance of the system.
 
 First, the complex pole pair ($s = -\sigma \pm j\omega_d$)  is analyzed to determine the damping ratio ($\zeta$) and natural frequency ($\omega_n$):
 \begin{equation}
@@ -68,7 +68,7 @@ Next, the Rise Time ($t_r$, 10\% to 90\%) is estimated using a second-order appr
 	t_r \approx \frac{1.8}{\omega_n} = \frac{1.8}{6.02} \approx 0.30 \text{ seconds}
 \end{equation}
 
-\comment{Lastly, the Settling Time ($t_s$, $\alpha = 2\%$) is estimated with another second-order approximation, this time on the dominant pole ($p_4$) representing the cart settling. Since the pendulum being upright is dependant on the cart settling.}{Switch sentence order: reasoning, then method}
+Lastly, since the pendulum being upright is dependant on the cart settling. The Settling Time ($t_s$, $\alpha = 2\%$) is estimated with another second-order approximation, this time on the dominant pole ($p_4$) representing the cart settling. 
 \begin{equation}
 	t_s \approx \frac{-\ln(\alpha)}{\sigma_{p_4}} = \frac{3.912}{1.95} \approx 2.01 \text{ seconds}
 \end{equation}
@@ -92,7 +92,7 @@ Where $\tau$ is the current moment in time. The standard state vector is then au
 \end{equation}
 
 \subsection{The Augmented Control Law}
-To implement LQI, the discrete system matrices and \remove{the }weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
+To implement LQI, the discrete system matrices and weight matrices are expanded to fit this fifth state. The augmented $\textbf{Q}$ matrix receives a new diagonal value specifically to penalize the integral error. The maximum of this value is set to $1.0$ and included in the new $\textbf{Q}$ using Bryson's rule. \newline
 
 Solving the algebraic Riccati equation again for this augmented system gives the new gain vector, and the resulting control law becomes:
 \begin{equation}
@@ -113,7 +113,7 @@ Like the LQR, all poles have negative real parts, meaning the system is stable. 
 	p_2 = -6.37, \quad p_3 = -5.73
 \end{equation}
 
-The speed of the pendulum balancing is limited by the slower of these two poles ($p_3 = -5.73$). By applying the first-order rise time definition (the time to travel from $10\%$ to $90\%$ of the reference) to this specific local dominant pole ($\sigma_{p_3} = 5.73$), the pendulum's theoretical rise time can now be estimated:
+The speed of the pendulum balancing is limited by the slower of these two poles ($p_3 = -5.73$). By applying the rise time definition (the time to travel from $10\%$ to $90\%$ of the reference) to this specific local dominant pole ($\sigma_{p_3} = 5.73$), the pendulum's theoretical rise time can be estimated:
 \begin{equation}
 	t_{0.1} = \frac{-\ln(0.90)}{\sigma_{p_3}} \approx 0.018 \text{ seconds}
 \end{equation}
@@ -130,7 +130,7 @@ Next, to find the Settling Time, the speed at which the cart settles must be fou
 \end{equation}
 
 \section{Cascaded PID Controller}
-While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart \remove{together with the transfer function derived in (reference to system modelling here!)}.
+While modern statespace methods like LQR are very effective for multivariable systems, classical control techniques can also be applied. Since regulating both the cart position and the pendulum position is required to balance the pendulum on the limited belt length, a single controller will not be enough. Instead, two cascaded regulators is used, one being a Proportional-Derivative (PD) controller for the pendulum and the other, a Proportional-Integral-Derivative (PID) controller for the cart.
 
 \subsection{Cascade Setup}
 The control system is divided into two nested feedback loops:
