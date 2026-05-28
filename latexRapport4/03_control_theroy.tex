@@ -46,7 +46,7 @@ Solving the algebraic Riccati equation with the\remove{se} weight matrices ($\te
 	u = -\textbf{K} \textbf{X} = -(K_1 x + K_2 \dot{x} + K_3 \theta + K_4 \dot{\theta})
 \end{equation}
 
-\subsection{Poles \& Performance for LQR}
+\subsection{Poles \& Performance for LQR} \label{Performance LQR}
 \replace{Evaluating}{To evaluate} the theoretical performance of the LQR controller, the closed-loop poles are analyzed. The calculated poles are:
 \begin{equation}
 	p_1 = -44.45, \quad p_{2,3} = -5.98 \pm 0.68i, \quad p_4 = -1.95
@@ -102,7 +102,7 @@ Solving the algebraic Riccati equation again for this augmented system gives the
 
 Because the $K_5 x_i$ term continuously builds up control effort as long as a there is an error in the cart position, it ensures that the cart will reach its target position, regardless of small physical imperfections, friction or other forces.
 
-\subsection{Poles \& Performance for LQI}
+\subsection{Poles \& Performance for LQI} \label{Performance LQI}
 Adding the integral state introduces a fifth pole to the closed-loop system. The calculated poles for the augmented controller is:
 \begin{equation}
 	p_1 = -43.97, \quad p_2 = -6.37, \quad p_3 = -5.73, \quad p_4 = -1.90, \quad p_5 = -0.52
