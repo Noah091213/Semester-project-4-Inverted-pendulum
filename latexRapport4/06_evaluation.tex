@@ -100,3 +100,19 @@ The angle of the swing up reacts in the opposite direction of the cart position,
 \end{figure}
 
  The motor force outputted during the swing up, like with the impulse, looks a bit different depending on how far up the swing got before the controller took over, and at what velocity. In practice this shows up as a different degree of spike during the switch, as the motor had to work less to catch the pendulum.
+ 
+ \section{Performance Metrics}
+ 
+ The performance metrics of the controllers on the physical system can be estimated from the test data. For this, the selected test sets used in the graphs will be analyzed.
+ 
+\subsection{LQI}
+
+The LQI controllers initial angle is $0.4663$ rad which forms the baseline for the performance metric calculations. To estimate the Settling Time the time step where the angle last is outside of 2\% of the initial angle ($0.4663 \cdot 0.02 = 0.0093$ rad) must be found. This is found to be true 1.49 seconds after the initial position. Thus $t_s \approx 1.49 s$.
+The Rise Time is found by identifying the time steps where the pendulum reaches 90\% ($0.4197$ rad) and 10\% ($0.0466$ rad) of the initial position, this happens after 0.02 and 0.2 seconds respectively. Thus $t_r \approx 0.2 - 0.02 \approx 0.18 s$.
+The overshoot is found by locating the time step with the highest value with opposite sign to the initial value. This is found to be $-0.1058$ rad. Thus $M_p \approx \frac{0.1058}{0.4663} \approx 22.7 \%$.
+
+\subsection{LQR}
+The initial angle for the LQR controller is $0.4648$ rad. The Settling Time at 2\% ($0.9296$ rad) is found 1.6 seconds after the initial position, thus $t_s \approx 1.6 s$. The Rise Time thresholds of 90\% ($0.4183$ rad) and 10\% ($0.0465$ rad) are found at 0.02 and 0.2 seconds respectively, meaning $t_r \approx 0.2 - 0.02 \approx 0.18 s$. The maximum overshoot is found to be $0.0966$ rad, thus $M_p \approx \frac{0.0966}{0.4648} \approx 20.8\%$.
+
+\subsection{PID}
+The initial angle of the Cascaded PID controller is $0.3022$ rad. The 2\% Settling Time is found after 0.73 seconds at an angle of $0.006$ rad, thus $t_s \approx 0.73s$. The Rise Time thresholds of $0.272$ and $0.0302$ rad are found at 0.05 and 0.27 seconds respectively, thus $t_r \approx 0.27 - 0.05 \approx 0.22s$. The maximum overshoot is found after 0.57 seconds at $0.0644$ rad, thus $M_p \approx \frac{0.0644}{0.3022} \approx 21.3\%$.
