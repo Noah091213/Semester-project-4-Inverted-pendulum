@@ -28,6 +28,9 @@ Another significant source of model mismatch comes from the physical simplificat
 \section{Data Collection} \label{sec:dataCollectionDiscussion}
 One of the major hardware limitations of the PLC is its storage capacity. This means it is not viable to collect the data directly on the PLC to be moved later. Thus the data must be moved from the PLC to another device continuously, which is why an OPC UA system was implemented. The speed of the OPC UA communication is somewhat limited, and paired with python, slightly fluctuating. This shows itself in the test data as the data points are not collected at a fixed rate. Though the PLC sampled information every millisecond, the collected samples have 3-4 ms between them. In order to counteract this uncertainty, the samples are sent as the last thing during a cycle and a step count from the PLC is sent along with it. This means the state of system should match the step count and should be consistent in each data sample, allowing the data to be synchronized. While this solution is sub-optimal, it was determined to be acceptable for the testing required in this project.
 
+\subsection{Simulation}
+The biggest issue of the simulation is the PID cascade controller simulation, as it is a copy of the PLC controller, it never uses any transer function. which gives a reson to belive why the simulink controller was unstable can be becouse the tranfer function and PID PD gains where not correct for simulation.
+
 \section{Test Results}
 The initial and simplest conclusion that can be drawn from the tests, is that getting different types of controllers, using different strategies, to balance the inverted pendulum on the physical setup was achieved. Having said that, there are quite a few important nuances and details to be considered.
 
